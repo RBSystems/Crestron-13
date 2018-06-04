@@ -1,0 +1,108 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer: John Roberts
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+// #ENABLE_DYNAMIC
+#SYMBOL_NAME "Check and Set IPT v02"
+// #HINT ""
+// #DEFINE_CONSTANT
+// #CATEGORY "" 
+// #PRINT_TO_TRACE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND 
+// #OUTPUT_SHIFT 
+// #HELP_PDF_FILE ""
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+// #ENCODING_ASCII
+// #ENCODING_UTF16
+// #ENCODING_INHERIT_FROM_PARENT
+// #ENCODING_INHERIT_FROM_PROGRAM
+/*
+#HELP_BEGIN
+   (add additional lines of help lines)
+#HELP_END
+*/
+
+DIGITAL_INPUT Check_IPT;
+STRING_INPUT This_Processor_IP_Address$[15]; 
+BUFFER_INPUT Console_rx$[1000];
+
+DIGITAL_OUTPUT Close_Console;
+STRING_OUTPUT Console_tx$;
+
+INTEGER_PARAMETER _SKIP_, _SKIP_, _SKIP_, _SKIP_, Program_Slot;
+STRING_PARAMETER _SKIP_, Processor_IP_Address[8][15], Device_IP_Address[8][15], Device_IPID[8][2];
+
+INTEGER DeviceID;
+
+
+PUSH Check_IPT
+{
+	INTEGER x;
+
+	FOR (x = 1 TO 8)
+	{
+    	IF (Processor_IP_Address[x] = This_Processor_IP_Address$)
+		{        	
+			DeviceID = x;
+			BREAK;
+		}
+		ELSE IF (x = 8)
+		{
+        	PRINT("No matching processor IP address. Please check module in program for correct IP address\r");
+		}
+	}
+
+	IF (DeviceID > 0)
+	{
+		MAKESTRING (Console_tx$, "IPT -P:%u\x0D", Program_Slot);
+		DELAY(300);
+
+		IF (FIND("IP Table for program", Console_rx$))
+		{
+			PRINT ("IPT Found\r");
+			PULSE(1, Close_Console);
+
+			IF (FIND(Device_IP_Address[DeviceID], Console_rx$))
+        	{
+				PRINT("Device %u Found in IPT on %s\r", x, Device_IP_Address[DeviceID]);
+				CLEARBUFFER(Console_rx$);
+			}
+		
+			ELSE
+			{
+				PRINT("No device found in IPT, attempting to add device now...\r");
+        		MAKESTRING (Console_tx$, "ADDPEER %s %s -p:%u\x0D", Device_IPID[DeviceID], Device_IP_Address[DeviceID], Program_Slot);
+				DELAY(300);
+				MAKESTRING (Console_tx$, "PROGRES -p:%u\x0D", Program_Slot);
+				CLEARBUFFER(Console_rx$);
+			}
+		}	
+		ELSE
+		{
+    		PRINT ("Error: IPT Not Found\r");
+		}
+	}
+}
+
+
+Function Main()
+{
+    WaitForInitializationComplete();
+	DeviceID = 0;
+}
+

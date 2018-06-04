@@ -1,0 +1,134 @@
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=ArchiveManifest
+  RelVrs=4.07.03
+  IsProgram=1
+  TopLevelProgram=OXLN_mdsol_TrainingRm_DMPS_v01.smw
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_TrainingRm_DMPS_v01.smw
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_TrainingRm_DMPS_v01.sig
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_TrainingRm_DMPS_v01.lpz
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_TrainingRm_DMPS_v01.smft
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_TrainingRm_DMPS_v01.lpz.hash
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=NV Text v01.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Oxberry Press and Hold v01.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira Command Processor IP v2.2.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira Comm v2.2.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=BiampTesiraLib.clz
+  Scope=2
+  Module=Biamp Tesira Comm v2.2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira Level Control v2.2.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira Level Control v2.2.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira State Control v2.2.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira State Control v2.2.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira State Control v2.2 Help.pdf
+  Scope=2
+  Module=Biamp Tesira State Control v2.2.ush
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira State Control v2.2 Help.pdf
+  Scope=2
+  Module=Biamp Tesira State Control v2.2.umc
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira VoIP Control v2.2.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Biamp Tesira VoIP Control v2.2.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Keyboard US-UK v01.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Keyboard Processor US-UK v01.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Cisco SX80 Corporate Phone Book.clz
+  Scope=2
+  Module=Keyboard Processor US-UK v01
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Cisco SX80 Phone Book.clz
+  Scope=2
+  Module=Keyboard Processor US-UK v01
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=SSH_Interface_v1_3.clz
+  Scope=2
+  Module=Keyboard Processor US-UK v01
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=SSH_Interface_v1_1.clz
+  Scope=2
+  Module=Keyboard Processor US-UK v01
+[END]

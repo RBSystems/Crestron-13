@@ -1,0 +1,6 @@
+<Device Model="DMPS3-4K-100-C">
+   <Network Type="Cresnet" Id="06"/>
+   <Network Type="Ethernet" Id="07">
+      <Device Model="TSW-560" DeviceId="14"/>
+   </Network>
+</Device>

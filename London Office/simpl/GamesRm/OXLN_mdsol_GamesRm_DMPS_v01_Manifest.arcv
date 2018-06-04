@@ -1,0 +1,63 @@
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=ArchiveManifest
+  RelVrs=4.07.03
+  IsProgram=1
+  TopLevelProgram=OXLN_mdsol_GamesRm_DMPS_v01.smw
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_GamesRm_DMPS_v01.smw
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_GamesRm_DMPS_v01.sig
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_GamesRm_DMPS_v01.lpz
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_GamesRm_DMPS_v01.smft
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=OXLN_mdsol_GamesRm_DMPS_v01.lpz.hash
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=HUMAX HDR 500.ir
+  Scope=1
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=NV Text v01.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Oxberry Press and Hold v01.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Samsung 460UTN-UD v2.0 Medidata.umc
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Samsung 460UTN-UD v1.0 Processor.ush
+  Scope=2
+[END]
+[BEGIN]
+  ObjTp=ArchiveItem
+  File=Samsung 460UTN-UD v1.0 Help.pdf
+  Scope=2
+  Module=Samsung 460UTN-UD v1.0 Processor.ush
+[END]

@@ -1,0 +1,53 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer: John Roberts
+Comments:
+*/
+
+#DEFAULT_NONVOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+
+
+STRING_INPUT Text_In$[10][100];
+STRING_OUTPUT Text_Out$[10];
+
+
+STRING Name$[10][100];
+
+
+
+CHANGE Text_In$
+{
+	INTEGER i;
+	
+	i = GETLASTMODIFIEDARRAYINDEX();
+
+	Name$[i-1] = Text_In$[i];
+	Text_Out$[i] = Name$[i-1];
+}
+
+
+Function Main()
+{
+	INTEGER i;
+
+	WaitForInitializationComplete();
+	FOR (i = 0 TO 9)
+	IF (Name$[i] = "")
+	{
+    	MAKESTRING (Name$[i], "Enter text");
+		Text_Out$[i+1] = Name$[i];
+	}	
+	ELSE
+	{
+		Text_Out$[i+1] = Name$[i];
+	}
+}

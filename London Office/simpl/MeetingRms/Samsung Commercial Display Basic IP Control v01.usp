@@ -1,0 +1,171 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer:
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+// #ENABLE_DYNAMIC
+#SYMBOL_NAME "Samsung Commercial Display Basic IP Control v01"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+
+DIGITAL_INPUT Connect, _skip_, Power_On, Power_Off, _skip_, HDMI_1, HDMI_2, HDMI_3;
+STRING_INPUT _skip_, ipAddress[16]; 
+
+DIGITAL_OUTPUT TCP_Connected_fb, _skip_, Power_On_fb, Power_Off_fb;
+ANALOG_OUTPUT _skip_,Connection_Status;                        
+
+TCP_CLIENT DisplayConnection[50];
+
+
+SIGNED_INTEGER giStatus;
+STRING giCommand[50], rx$[50];
+
+
+FUNCTION SendCommand()
+{
+	IF (TCP_Connected_fb = 1)
+	{
+		giStatus = SOCKETSEND(DisplayConnection, giCommand);
+	}
+	ELSE
+	{
+    	TRACE("TCP not Connected");
+	}
+}
+
+FUNCTION ReceiveCommand()
+{
+	IF(rx$ = "\xAA\xFF\x00\x03\x41\x11\x01\x55")
+	{
+    	Power_On_fb = 1;
+		Power_Off_fb = 0;
+	}
+	IF(rx$ = "\xAA\xFF\x00\x03\x41\x11\x00\x54")
+	{
+    	Power_On_fb = 0;
+    	Power_Off_fb = 1;
+	}	
+}
+
+FUNCTION Reconnect()
+{
+	WHILE(Connection_Status = 4)
+	{
+		giStatus = SocketConnectClient (DisplayConnection, ipAddress, 1515, 0);
+
+		IF(giStatus < 0)
+		{
+			TRACE("Socket Connect Client Error %d", giStatus);
+        }
+		DELAY(3000);
+	}
+
+}
+
+PUSH Connect
+{
+	giStatus = SocketConnectClient (DisplayConnection, ipAddress, 1515, 0);
+
+	IF(giStatus < 0)
+	{
+		TRACE("Socket Connect Client Error %d", giStatus);
+	}
+}
+
+RELEASE Connect
+{
+	giStatus = SocketDisconnectClient (DisplayConnection);
+
+	IF(giStatus < 0)
+	{
+	TRACE("Socket Connect Client Error %d", giStatus);
+	}
+}
+
+PUSH Power_On
+{	
+	giCommand = "\xAA\x11\x00\x01\x01\x13";	
+	SendCommand();
+}
+
+PUSH Power_Off
+{
+	giCommand = "\xAA\x11\x00\x01\x00\x12";
+	SendCommand();
+
+}
+
+PUSH HDMI_1
+{
+	giCommand = "\xAA\x14\x00\x01\x21\x36";
+	SendCommand();	
+}
+
+PUSH HDMI_2
+{
+	giCommand = "\xAA\x14\x00\x01\x22\x37";
+	SendCommand();
+}
+
+PUSH HDMI_3
+{
+	giCommand = "\xAA\x14\x00\x01\x23\x38";
+	SendCommand();
+}
+
+
+SOCKETCONNECT DisplayConnection
+{
+	TCP_Connected_fb = 1;
+	giCommand = "\xAA\x11\x00\x00\x11";
+	SendCommand();	
+
+	IF(giStatus < 0)
+		TRACE("Socket Send Error %d", giStatus);
+}
+
+SOCKETSTATUS DisplayConnection
+{
+	Connection_Status = DisplayConnection.SOCKETSTATUS;
+
+	IF (Connection_Status = 4)
+	DELAY(1000);
+	Reconnect();
+}
+
+THREADSAFE SOCKETRECEIVE DisplayConnection
+{          
+	WHILE(1)
+	{
+		rx$ = DisplayConnection.SocketRxBuf;
+		ReceiveCommand();	
+		//SocketDisconnectClient(DisplayConnection);
+		CLEARBUFFER(DisplayConnection.SocketRxBuf);
+		BREAK; 		
+	}
+}
+
+SOCKETDISCONNECT DisplayConnection
+{
+	TCP_Connected_fb = 0;
+}
+
+Function Main()
+{
+    WaitForInitializationComplete();
+}
+
+
