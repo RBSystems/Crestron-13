@@ -1,0 +1,137 @@
+/*
+Dealer Name:
+Programmer:  Charlie Spataro
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+*******************************************************************************************/
+#SYMBOL_NAME "ClearOne VoIP Dialer Control (CS) v1.0.0"
+#CATEGORY "20"	//Conferencing 
+#DEFAULT_NONVOLATILE
+//#ENABLE_STACK_CHECKING
+
+#HELP_BEGIN
+                   				
+This module should only be used within the simpl windows macro with the same name.
+    	  
+#HELP_END
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+*******************************************************************************************/
+DIGITAL_INPUT Dial, Clear, Backspace;
+ANALOG_INPUT Max_Dial_Length;
+STRING_INPUT Dial_Character$[1], Dial_In$[24], Dial_Header$[3];
+BUFFER_INPUT From_Device_Rx$[1000];
+
+DIGITAL_OUTPUT No_Text;
+STRING_OUTPUT Dial_Out$, To_Device$, Caller_ID_Num$, Caller_ID_Text$;
+
+/*******************************************************************************************
+  Global Variables
+*******************************************************************************************/
+STRING Number$[25], headerStore[6], TempString$[250], Dump$[250];
+INTEGER semaphore;
+
+/*******************************************************************************************
+  Functions
+*******************************************************************************************/
+
+FUNCTION Get_Caller_ID()
+{
+	STRING TempString$[250], Dump$[250];
+     
+	IF(semaphore = 0)
+	{
+		semaphore = 1;
+
+		WHILE(LEN(From_Device_Rx$) > 0)
+		{
+			// Look for Caller ID
+			TempString$ = REMOVE("\x0D", From_Device_Rx$);
+			IF(FIND("#E0 XCALLERID 1 Z ", TempString$))
+			{   //Parse Caller ID
+				Dump$ = REMOVE("#E0 XCALLERID 1 Z ", TempString$);
+				Caller_ID_Num$ = LEFT(TempString$, FIND("\x20", TempString$) - 1);
+				Dump$ = RIGHT(TempString$, LEN(TempString$) - 1);
+				Caller_ID_Text$ = LEFT(TempString$, LEN(TempString$) - 1);
+				From_Device_Rx$ = "";
+			}
+		}// END WHILE
+        semaphore = 0;
+    }//END IF
+}//End Function
+
+		
+/*******************************************************************************************
+  Event Handlers
+*******************************************************************************************/
+CHANGE Dial_Character$
+{
+	If(Len(Dial_In$) < Max_Dial_Length)
+	{
+		Dial_Out$ = Dial_In$ + Dial_Character$;
+	}
+}
+
+CHANGE Dial_In$
+{
+	If(Len(Dial_In$) > 0) No_Text = 0;
+    Else No_Text = 1;
+} 
+
+PUSH Dial
+{
+	If(Len(Dial_In$) > 0)
+	{	
+		To_Device$ = Dial_Header$ + " XDIAL 1 Z " + Dial_In$ + "\x0D"; 
+	}
+}
+
+PUSH Clear
+{
+	Dial_Out$ = "";
+}
+
+PUSH Backspace
+{
+	If(Len(Dial_In$) > 0)
+	{
+		Dial_Out$ = Left(Dial_In$, Len(Dial_In$) - 1);
+	}
+} 
+
+CHANGE From_Device_Rx$
+{     
+	IF(semaphore = 0)
+	{
+		semaphore = 1;
+
+		WHILE(LEN(From_Device_Rx$) > 0)
+		{
+			// Look for Caller ID
+			TempString$ = REMOVE("\x0D", From_Device_Rx$);
+			IF(FIND("#E0 XCALLERID 1 Z ", TempString$))
+			{   //Parse Caller ID
+				Dump$ = REMOVE("#E0 XCALLERID 1 Z ", TempString$);
+				Caller_ID_Num$ = LEFT(TempString$, FIND("\x20", TempString$) - 1);
+				Dump$ = RIGHT(TempString$, LEN(TempString$) - 1);
+				Caller_ID_Text$ = LEFT(TempString$, LEN(TempString$) - 1);
+				From_Device_Rx$ = "";
+			}
+		}// END WHILE
+        semaphore = 0;
+    }//END IF
+	
+}
+
+
+/*******************************************************************************************
+  Main()
+*******************************************************************************************/
+Function Main()
+{
+    Dial_Out$ = "";
+    No_Text = 1;   
+}

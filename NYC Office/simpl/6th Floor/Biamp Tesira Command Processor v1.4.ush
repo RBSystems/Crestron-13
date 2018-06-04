@@ -1,0 +1,102 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.04.01
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+  Cmn1=To be used with Biamp Tesira Command Processor v1.4.umc or Biamp||1
+  Cmn2=Tesira Command Processor IP v1.4.umc modules only.\\Not to be used||1
+  Cmn3=as a stand-alone module.
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,718,756,854,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=Biamp Tesira Command Processor v1.4
+  SmplCName=Biamp Tesira Command Processor v1.4.usp
+  Code=1
+  SysRev5=4.006
+  SMWRev=3.00.00
+  InputCue1=Initialize
+  InputSigType1=Digital
+  InputCue2=Is_RS232
+  InputSigType2=Digital
+  InputCue3=Connect
+  InputSigType3=Digital
+  InputCue4=Disconnect
+  InputSigType4=Digital
+  InputCue5=[~UNUSED~]
+  InputSigType5=Digital
+  OutputCue1=Is_Initialized
+  OutputSigType1=Digital
+  OutputCue2=[~UNUSED~]
+  OutputSigType2=Digital
+  OutputCue3=Is_Communicating
+  OutputSigType3=Digital
+  OutputCue4=[~UNUSED~]
+  OutputSigType4=Digital
+  OutputCue5=[~UNUSED~]
+  OutputSigType5=Digital
+  InputList2Cue1=From_Device$
+  InputList2SigType1=Serial
+  InputList2Cue2=[~UNUSED~]
+  InputList2SigType2=Serial
+  InputList2Cue3=From_Modules$
+  InputList2SigType3=Serial
+  OutputList2Cue1=To_Device$
+  OutputList2SigType1=Serial
+  OutputList2Cue2=[~UNUSED~]
+  OutputList2SigType2=Serial
+  OutputList2Cue3=To_Modules$[#]
+  OutputList2SigType3=Serial
+  ParamCue1=[Reference Name]
+  MinVariableInputs=5
+  MaxVariableInputs=5
+  MinVariableInputsList2=3
+  MaxVariableInputsList2=3
+  MinVariableOutputs=5
+  MaxVariableOutputs=5
+  MinVariableOutputsList2=3
+  MaxVariableOutputsList2=102
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=32
+  Hint=
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_Biamp_Tesira_Command_Processor_v1_4
+  SymJam=NonExclusive
+  FileName=Biamp Tesira Command Processor v1.4.ush
+  SIMPLPlusModuleEncoding=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]

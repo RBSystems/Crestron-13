@@ -1,0 +1,111 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.04.01
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,718,756,854,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=RVSE_Generic_Tab_Control_v1a+
+  SmplCName=RVSE_Generic_Tab_Control_v1a+.usp
+  Code=1
+  SysRev5=4.006
+  SMWRev=3.00.00
+  InputCue1=Debug
+  InputSigType1=Digital
+  InputCue2=Enable
+  InputSigType2=Digital
+  InputCue3=Show_Function[1]
+  InputSigType3=Digital
+  InputCue4=Show_Function[2]
+  InputSigType4=Digital
+  InputCue5=Show_Function[3]
+  InputSigType5=Digital
+  InputCue6=Show_Function[4]
+  InputSigType6=Digital
+  InputCue7=Show_Function[5]
+  InputSigType7=Digital
+  InputCue8=Enable_Function[#]
+  InputSigType8=Digital
+  InputList2Cue1=Tab_Label_In$[#]
+  InputList2SigType1=Serial
+  OutputList2Cue1=Tab_Qty
+  OutputList2SigType1=Analog
+  OutputList2Cue2=Tab_Mode[1]
+  OutputList2SigType2=Analog
+  OutputList2Cue3=Tab_Mode[2]
+  OutputList2SigType3=Analog
+  OutputList2Cue4=Tab_Mode[3]
+  OutputList2SigType4=Analog
+  OutputList2Cue5=Tab_Mode[4]
+  OutputList2SigType5=Analog
+  OutputList2Cue6=Tab_Mode[5]
+  OutputList2SigType6=Analog
+  OutputList2Cue7=Tab_Function_Value[1]
+  OutputList2SigType7=Analog
+  OutputList2Cue8=Tab_Function_Value[2]
+  OutputList2SigType8=Analog
+  OutputList2Cue9=Tab_Function_Value[3]
+  OutputList2SigType9=Analog
+  OutputList2Cue10=Tab_Function_Value[4]
+  OutputList2SigType10=Analog
+  OutputList2Cue11=Tab_Function_Value[5]
+  OutputList2SigType11=Analog
+  OutputList2Cue12=Tab_Label_Out$[#]
+  OutputList2SigType12=Serial
+  ParamCue1=[Reference Name]
+  MinVariableInputs=8
+  MaxVariableInputs=12
+  MinVariableInputsList2=1
+  MaxVariableInputsList2=5
+  MinVariableOutputs=0
+  MaxVariableOutputs=0
+  MinVariableOutputsList2=12
+  MaxVariableOutputsList2=16
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=32
+  Hint=
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_RVSE_Generic_Tab_Control_v1a_
+  SymJam=NonExclusive
+  FileName=RVSE_Generic_Tab_Control_v1a+.ush
+  SIMPLPlusModuleEncoding=0
+  clz1=Cisco SX80 Corporate Phone Book
+  clz2=Cisco SX80 Phone Book
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]

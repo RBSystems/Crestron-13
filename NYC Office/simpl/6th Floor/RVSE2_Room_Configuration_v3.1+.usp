@@ -1,0 +1,1808 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer:
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+//#SYMBOL_NAME "RVSE2_Room_Configuration_v3+"
+
+/*** VERSION HISTORY
+   
+  v1
+  ====
+   -initial release
+   
+****/   
+   
+   
+// #HINT ""
+#DEFINE_CONSTANT TRUE   1
+#DEFINE_CONSTANT FALSE  0
+
+#DEFINE_CONSTANT NVRAM_VAL  "YES1234"
+
+#DEFINE_CONSTANT MAX_BUFF_SIZE	65000
+
+#DEFINE_CONSTANT MAX_ROOM_ID_LEN						50
+#DEFINE_CONSTANT MAX_ROOM_NAME_LEN					75
+#DEFINE_CONSTANT MAX_ROOM_FNAME_LEN					25
+#DEFINE_CONSTANT MAX_ROOM_DESCRIPTION_LEN		75
+#DEFINE_CONSTANT MAX_ROOM_LOCATION_LEN			50
+#DEFINE_CONSTANT MAX_ROOM_TIME_ZONE_LEN			150
+#DEFINE_CONSTANT MAX_DEFAULT_SUBJECT_LEN		100
+#DEFINE_CONSTANT MAX_DEFAULT_ORGANIZER_LEN	50
+#DEFINE_CONSTANT MAX_URL_LEN                200
+
+#DEFINE_CONSTANT MODE_IDLE				0
+#DEFINE_CONSTANT MODE_REQUEST			1
+#DEFINE_CONSTANT MODE_RESPONSE		2
+#DEFINE_CONSTANT MODE_ERROR				3	
+
+#DEFINE_CONSTANT NODE_ROOT  							0
+#DEFINE_CONSTANT NODE_CUSTOM_PROPERTIES  	1
+#DEFINE_CONSTANT NODE_CUSTOM_FIELDS				2
+#DEFINE_CONSTANT NODE_CAPABILITIES				3
+
+// Custom Field Defs - UI
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_MEETING_INFO				1
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_DAY_VIEW						2
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_AVAILABLE_ROOMS			3
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_RESERVE_NOW					4
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_SEARCH_WIZARD				5
+#DEFINE_CONSTANT CUSTOM_ID_EN_DAY_VIEW_INFO					6
+#DEFINE_CONSTANT CUSTOM_ID_EN_DAY_VIEW_RESERVE			7
+#DEFINE_CONSTANT CUSTOM_ID_EN_DAY_VIEW_PREV_DAY			8
+#DEFINE_CONSTANT CUSTOM_ID_EN_TOOLS_PAGE						9
+
+// Custom Field Defs - Logic
+#DEFINE_CONSTANT CUSTOM_ID_DEFAULT_SUBJECT									20
+#DEFINE_CONSTANT CUSTOM_ID_DEFAULT_ORGANIZER								21
+#DEFINE_CONSTANT CUSTOM_ID_ROOM_PRIVACY_LEVEL								22
+#DEFINE_CONSTANT CUSTOM_ID_EN_DECLINE_FORNOSHOW							23
+#DEFINE_CONSTANT CUSTOM_ID_DECLINE_FORNOSHOW_APPLIES_DUR		24
+#DEFINE_CONSTANT CUSTOM_ID_DECLINE_FORNOSHOW_MIN						25
+#DEFINE_CONSTANT CUSTOM_ID_RESERVE_NOW_MAX_DUR							26
+#DEFINE_CONSTANT CUSTOM_ID_ROOM_FRIENDLY_NAME								27
+#DEFINE_CONSTANT CUSTOM_ID_RESERVE_NOW_DEFAULT_SUBJECT			28
+#DEFINE_CONSTANT CUSTOM_ID_RESERVE_NOW_DEFAULT_ORGANIZER		29
+
+// Custom Field Defs - Misc
+#DEFINE_CONSTANT CUSTOM_ID_DATE_FORMAT  30
+#DEFINE_CONSTANT CUSTOM_ID_DECLINE_FOR_NO_SHOW_APPLY_DUR  31
+#DEFINE_CONSTANT CUSTOM_ID_DECLINE_FOR_NO_SHOW_CHECK_AT_EXACT_MIN  32
+#DEFINE_CONSTANT CUSTOM_ID_DECLINE_FOR_NO_SHOW_MIN  33
+#DEFINE_CONSTANT CUSTOM_ID_DECLINE_FOR_NO_SHOW_PER  34
+#DEFINE_CONSTANT CUSTOM_ID_EN_BROADCAST_MESSAGE  35
+#DEFINE_CONSTANT CUSTOM_ID_EN_DECLINE_FOR_NO_SHOW  36
+#DEFINE_CONSTANT CUSTOM_ID_EN_FREE_UP_ROOM  37
+#DEFINE_CONSTANT CUSTOM_ID_EN_START_MEETING  38
+#DEFINE_CONSTANT CUSTOM_ID_EN_TOOLS_MENU  39
+#DEFINE_CONSTANT CUSTOM_ID_EN_WAKE_UP_TO_MEETING  40
+#DEFINE_CONSTANT CUSTOM_ID_FREE_UP_ROOM_EN_MIN  41
+#DEFINE_CONSTANT CUSTOM_ID_FREE_UP_ROOM_EN_PER  42
+#DEFINE_CONSTANT CUSTOM_ID_FREE_UP_ROOM_EN_USE_MIN  43
+#DEFINE_CONSTANT CUSTOM_ID_FREE_UP_ROOM_EN_USE_PER  44
+#DEFINE_CONSTANT CUSTOM_ID_MOTION_SENSOR_LED_TRACK  45
+#DEFINE_CONSTANT CUSTOM_ID_MOTION_SENSOR_OUTPUT  46
+#DEFINE_CONSTANT CUSTOM_ID_MOTION_SENSOR_TIMEOUT  47
+#DEFINE_CONSTANT CUSTOM_ID_MOTION_SENSOR_TYPE  48
+#DEFINE_CONSTANT CUSTOM_ID_RESERVE_NOW_END_EVEN_TIME  49
+#DEFINE_CONSTANT CUSTOM_ID_RESERVE_NOW_TIME_SELECTION  50
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_AVAILABLE_TIMES  51
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_MEETING_ORGANIZER  52
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_MEETING_SUBJECT  53
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_MEETING_TIMES  54
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_MENU_BKGD_IMAGE_URL  55
+#DEFINE_CONSTANT CUSTOM_ID_SHOW_MENU_LOGO_IMAGE_URL  56
+#DEFINE_CONSTANT CUSTOM_ID_TIME_FORMAT  57
+#DEFINE_CONSTANT CUSTOM_ID_EN_PANEL_WAKE_UP  58
+#DEFINE_CONSTANT CUSTOM_ID_INCLUDE_IN_AVAIL_ROOMS  59
+
+#DEFINE_CONSTANT CUSTOM_TYPE_BOOL			1
+#DEFINE_CONSTANT CUSTOM_TYPE_DATE			2
+#DEFINE_CONSTANT CUSTOM_TYPE_INTEGER	3
+#DEFINE_CONSTANT CUSTOM_TYPE_STRING		4
+#DEFINE_CONSTANT CUSTOM_TYPE_TEXT			5
+#DEFINE_CONSTANT CUSTOM_TYPE_URL      6
+
+#DEFINE_CONSTANT PUBLIC_LEVEL    0
+#DEFINE_CONSTANT SEMI_LEVEL      1
+#DEFINE_CONSTANT PRIVATE_LEVEL   2
+
+#DEFINE_CONSTANT US_DATE_FORMAT    0
+#DEFINE_CONSTANT EURO_DATE_FORMAT  1
+#DEFINE_CONSTANT INT_DATE_FORMAT   2
+
+#DEFINE_CONSTANT RESERVE_NOW_MAX_DUR_BLOCK 30
+#DEFINE_CONSTANT RESERVE_NOW_MAX_DUR_MINIMUM 30
+#DEFINE_CONSTANT RESERVE_NOW_MAX_DUR_MAXIMUM 120
+
+#DEFINE_CONSTANT INTELLIGENT_MOTION_SENSOR  0
+#DEFINE_CONSTANT BASIC_MOTION_SENSOR        1
+
+#DEFINE_CONSTANT NORMAL_OPEN_OUTPUT_MOTION_SENSOR   0
+#DEFINE_CONSTANT NORMAL_CLOSE_OUTPUT_MOTION_SENSOR  1
+
+// #CATEGORY "" 
+//#DEFAULT_VOLATILE
+#PRINT_TO_TRACE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND 
+// #OUTPUT_SHIFT 
+//#DEFAULT_NONVOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+#HELP_BEGIN
+
+	The following custom fields will need to be defined in RoomView:
+	
+		ID = ShowMeetingInfo (Digital)
+		ID = ShowDayView (Digital)
+		ID = ShowAvailableRooms (Digital)
+		ID = ShowReserveNow (Digital)
+		
+		ID = EnDayViewInfo (Digital)
+		ID = EnDayViewAddAppt (Digital)
+		ID = EnDayViewPreviousDay (Digital)
+		
+		ID = EnToolsPage (Digital)
+		
+		ID = EnDeclineForNoShow (Digital)
+		ID = DeclineForNoShowAppliesDur (Analog)
+		ID = DeclineForNoShowMin (Analog)
+		ID = ReserveNowMaxDur (Analog)
+		
+		ID = RoomFriendlyName (Serial)
+		
+#HELP_END
+
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional librarys as needed)
+*******************************************************************************************/
+// #CRESTRON_LIBRARY ""
+// #USER_LIBRARY ""
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+
+DIGITAL_INPUT Debug,
+              Initialize_Module,
+							Clear_All_Stored_Data,
+              Get_Configuration,
+              Data_Timeout,
+              Load_Stored_Values;
+
+DIGITAL_INPUT UI_Config_Menu_Show_Meeting_Info,
+              UI_Config_Menu_Show_Meeting_Subject,
+              UI_Config_Menu_Show_Meeting_Organizer,
+              UI_Config_Menu_Show_Meeting_Times,
+              UI_Config_Menu_Show_Day_View,
+              UI_Config_Day_View_Get_Info,
+              UI_Config_Day_View_Add_Appt,
+              UI_Config_Day_View_En_Prev_Day,
+              UI_Config_Menu_Show_Avaialble_Rooms,
+              UI_Config_Menu_Show_Reserve_Now,
+              UI_Config_Reserve_Now_Max_Dur_Minus,
+              UI_Config_Reserve_Now_Max_Dur_Plus,
+              UI_Config_Reserve_Now_Even_End_Time,
+              UI_Config_Reserve_Now_Time_Select,
+              UI_Config_Next_Reserve_Show_Info,
+              UI_Config_Panel_Wake_Up_To_Meeting,
+              
+              Room_Config_En_Decline_For_No_Show,
+              Room_Config_Decline_For_No_Show_Apply_To_Minus,
+              Room_Config_Decline_For_No_Show_Apply_To_Plus,
+              Room_Config_Decline_For_No_Show_After_Minus,
+              Room_Config_Decline_For_No_Show_After_Plus,
+              Room_Config_Decline_For_No_Show_Check_On_Exact_Min,
+              Room_Config_Privacy_Level_Public,
+              Room_Config_Privacy_Level_Semi,
+              Room_Config_Privacy_Level_Private,
+              Room_Config_Motion_Sensor_Type,
+              Room_Config_Motion_Sensor_Output,
+              Room_Config_Motion_Sensor_Release_Time_Minus,
+              Room_Config_Motion_Sensor_Release_Time_Plus,
+              Room_Config_En_End_Meeting_Btn,
+              Room_Config_En_Start_Meeting_Btn,
+              Room_Config_En_Broadcast_Message,
+              
+              Date_Format_US,
+              Date_Format_Euro,
+              Date_Format_Int,
+              
+              Time_Format
+              
+              ;
+ 
+// ANALOG_INPUT
+ 
+STRING_INPUT RoomID$[75];
+STRING_INPUT DefaultSubject$[MAX_DEFAULT_SUBJECT_LEN];
+ 
+BUFFER_INPUT From_RV_RoomConfigReponse$[MAX_BUFF_SIZE]; 
+
+DIGITAL_OUTPUT Initialize_Module_Busy_FB,
+               Menu_En_Tools_Page,
+							 Menu_Show_Meeting_Info,
+							 Menu_Show_Day_View,
+							 Menu_Show_Available_Rooms,
+							 Menu_Show_Reserve_Now,
+							 Menu_Show_Search_Wizard,
+							 Menu_DayView_En_Info,
+							 Menu_DayView_En_Add_Appt,
+							 Menu_DayView_En_Previous_Day,
+							 Config_En_DeclineForNoShow,
+							 Config_En_PushModel,
+               DeclineForNoShow_CheckAtExactMin,
+               Config_En_BroadcastMessage,
+               Config_En_FreeUpRoom,
+               Config_En_StartMeeting,
+               Config_En_PanelWakeUp,
+               Config_FreeUpRoom_En_Min,
+               Config_FreeUpRoom_En_Per,
+               Config_MotionSensor_Type,
+               Config_MotionSensor_Output,
+               Config_MotionSensor_LED_Track,
+               Config_ReserveNow_Even_End_Time,
+               Config_ReserveNow_Time_Select,
+               Config_En_AvailableTimes,
+               Menu_Show_Subject,
+               Menu_Show_Organizer,
+               Menu_Show_Times,
+               Config_Time_Format              
+               ;
+                
+ANALOG_OUTPUT Module_Status,
+						  Config_DeclineForNoShowAppliesDur,
+              Config_DeclineForNoShowMin,
+              Config_ReserveNowMaxDur,
+              Config_RoomPrivacyLevel,
+              Config_Date_Format,
+              Config_DeclineForNoShowPer,
+              Config_FreeUpRoom_EnUseMin,
+              Config_FreeUpRoom_EnUsePer,
+              Config_MotionSensor_Timeout
+              ;
+
+ 
+STRING_OUTPUT To_RV_RoomConfigQuery$,
+              Config_RoomID$,
+              Config_RoomName$,
+              Config_RoomFriendlyName$,
+              Config_RoomDescription$,
+              Config_RoomLocation$,
+              Config_RoomTimeZone$,
+              Config_DefaultSubject$,
+              Config_DefaultOrganizer$,
+              Config_ReserveNow_DefaultSubject$,
+              Config_ReserveNow_DefaultOrganizer$,
+              Config_Menu_Show_Bkgd_Image_URL$,
+              Config_Menu_Show_Logo_Image_URL$
+              ;      
+
+/*******************************************************************************************
+  Structure Definitions
+  (Uncomment and define structure definitions as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: struct.myString = "";
+*******************************************************************************************/
+
+STRUCTURE RoomDataStruct
+{
+	integer MenuEnToolsPage;
+	
+	integer MenuShowMeetingInfo;
+	integer MenuShowDayView;
+	integer MenuShowAvailableRooms;
+	integer MenuShowReserveNow;
+	integer MenuShowSearchWizard;
+	
+	integer MenuDayViewEnInfo;
+	integer MenuDayViewEnReserve;
+	integer MenuDayViewEnPrevDay; 
+  
+  integer MenuShowMeetingSubject,
+			    MenuShowMeetingOrganizer,
+			    MenuShowMeetingTimes,
+			    MenuShowAvailableTime,
+			    MenuEnWakeupToMeeting;
+          
+  string  MenuBkgdImageURL[MAX_URL_LEN],
+			    MenuLogoImageURL[MAX_URL_LEN];
+          
+  string RoomID[MAX_ROOM_ID_LEN];
+  string RoomName[MAX_ROOM_NAME_LEN];
+  string RoomFriendlyName[MAX_ROOM_FNAME_LEN];
+  string RoomDescription[MAX_ROOM_DESCRIPTION_LEN];
+  string RoomTimeZone[MAX_ROOM_TIME_ZONE_LEN];
+  string RoomLocation[MAX_ROOM_LOCATION_LEN];
+  string DefaultSubject[MAX_DEFAULT_SUBJECT_LEN];
+  string DefaultOrganizer[MAX_DEFAULT_ORGANIZER_LEN];
+  string ReserveNowDefaultSubject[MAX_DEFAULT_SUBJECT_LEN];
+  string ReserveNowDefaultOrganizer[MAX_DEFAULT_ORGANIZER_LEN];
+
+  integer EnDeclineForNoShow;
+  integer DeclineForNoShowAppliesDur;
+  integer DeclineForNoShowMin;
+  integer DeclineForNoShowPer;
+  integer DeclineForNoShowEnCheckAtExactMin;
+  
+  integer EnFreeUpRoom,
+			    FreeUpRoomEnUseMin,
+			    FreeUpRoomEnUsePer,
+          FreeUpRoomEnMin,
+			    FreeUpRoomEnPer;
+          
+  integer EnStartMeeting;
+  
+  integer ReserveNowMaxDur,
+          ReserveNowEvenEndtime,
+          ReserveNowTimeSelection;
+          
+          
+  integer RoomPrivacyLevel;
+  integer EnPushModel;
+  
+  integer MotionSensorType,
+			    MotionSensorOutput,
+			    MotionSensorTimeout,
+			    MotionSensorLEDSTrack;
+
+  integer DateFormat,
+          TimeFormat;
+
+  integer EnBroadcastMessage;
+  
+  integer EnToolsMenu;
+  
+};
+
+NONVOLATILE RoomDataStruct ConfigData;
+
+
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+
+//*** General
+NONVOLATILE STRING g_sNVDataCleared[10],
+                   g_sHaveStoredConfigData[10];
+
+INTEGER g_bRXOK;
+
+STRING  g_sRXData[MAX_BUFF_SIZE];
+INTEGER g_iDataIndex;
+
+STRING g_sRequestID[75];
+
+//SIGNED_INTEGER
+// LONG_INTEGER
+// SIGNED_INTEGER
+// SIGNED_LONG_INTEGER
+
+ 
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+
+
+Function ProcessConfigData(string sData)
+{
+  string sRemoved[255];
+  
+  integer iNode,
+  				iPos,
+  				iCustomID,
+  				iCustomType,
+  				iDeclineType;
+  
+  integer bValue,
+  				iValue,
+          count;
+  
+  string sValue[255];
+  
+  string test1[256], test2[256], test3[256], test4[256];
+  
+  if (Debug)
+  {
+  	print ("\n** ProcessConfigData **\n");
+  	print ("  Data Len:%u\n", len(sData));
+  }
+    
+  iNode = NODE_ROOT;
+  iCustomID = 0;
+  iCustomType = 0;
+  bValue = FALSE;
+  iValue = 0;
+  sValue = "";
+  count = 0;
+         
+  do
+  {
+  	sRemoved = remove(">", sData);
+  	
+  	if (Debug)
+  	 print("Removed:%s\n", sRemoved);
+  	
+  	if (iNode = NODE_ROOT)
+  	{
+	    if (find("</ID>", sRemoved))
+	    {
+				if (Debug)
+				 print ("Found Room ID\n");
+	      
+	      Config_RoomID$ = left(sRemoved, len(sRemoved) - 5);
+	      ConfigData.RoomID = left(sRemoved, len(sRemoved) - 5);
+	    }
+	    else if (find("</Name>", sRemoved))
+	    {
+				if (Debug)
+				 print ("Found Name\n");
+				 
+	      Config_RoomName$ = left(sRemoved, len(sRemoved) - 7);
+	      ConfigData.RoomName = left(sRemoved, len(sRemoved) - 7);
+	    }
+	    else if (find("</Description>", sRemoved))
+	    {
+				if (Debug)
+				 print ("Found Description\n");
+				 
+	      Config_RoomDescription$ = left(sRemoved, len(sRemoved) - 14);
+	      ConfigData.RoomDescription = left(sRemoved, len(sRemoved) - 14);
+	    }
+	    else if (find("</Location>", sRemoved))
+	    {
+				if (Debug)
+				 print ("Found Location\n");
+				 
+	      Config_RoomLocation$ = left(sRemoved, len(sRemoved) - 11);
+	      ConfigData.RoomLocation = left(sRemoved, len(sRemoved) - 11);
+	    }
+	    else if (find("</TimeZone>", sRemoved))
+	    {
+				if (Debug)
+				 print ("Found TimeZone\n");
+				 
+	      Config_RoomTimeZone$ = left(sRemoved, len(sRemoved) - 11);
+	      ConfigData.RoomTimeZone = left(sRemoved, len(sRemoved) - 11);
+	    }
+	    else if (find("<CustomFields>", sRemoved))
+	    {
+				if (Debug)
+				 print ("Begin Custom Fields\n");
+				
+				iNode = NODE_CUSTOM_FIELDS;
+	    }
+	    else if (find("<Capabilities>", sRemoved))
+	    {
+	    	if (Debug)
+	    	 print ("Begin Capabilites\n");
+	    	 
+	    	iNode = NODE_CAPABILITIES;
+	    }  	
+  	}
+  	else if (iNode = NODE_CUSTOM_FIELDS)
+  	{
+  		if (find("</CustomFields>", sRemoved))
+	    {
+	      if (Debug)
+	       print ("End Custom Fields\n");
+	      
+	      iNode = NODE_ROOT;
+	    }
+	    else
+	    {
+
+	      // Do not have custom id yet.
+	      if (iCustomID = 0)
+	      {
+		      iCustomType = 0;
+		      
+		      if (find("<CustomField ID=\x22MenuShowMeetingInfo\x22", sRemoved))
+		      {
+		       	iCustomID = CUSTOM_ID_SHOW_MEETING_INFO;
+		      }          
+          else if (find("<CustomField ID=\x22MenuShowMeetingSubject\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_MEETING_SUBJECT;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowMeetingOrganizer\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_MEETING_ORGANIZER;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowMeetingTimes\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_MEETING_TIMES;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowAvailableTime\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_AVAILABLE_TIMES;
+		      }
+          else if (find("<CustomField ID=\x22MenuBkgdImageURL\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_MENU_BKGD_IMAGE_URL;
+		      }
+          else if (find("<CustomField ID=\x22MenuLogoImageURL\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_MENU_LOGO_IMAGE_URL;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowDayView\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_DAY_VIEW;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowAvailableRooms\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_AVAILABLE_ROOMS;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowReserveNow\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_RESERVE_NOW;
+		      }
+          else if (find("<CustomField ID=\x22MenuShowSearchWizard\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_SHOW_SEARCH_WIZARD;
+		      }
+          else if (find("<CustomField ID=\x22MenuDayViewEnInfo\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_DAY_VIEW_INFO;
+		      }
+          else if (find("<CustomField ID=\x22MenuDayViewEnReserve\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_DAY_VIEW_RESERVE;
+		      }
+          else if (find("<CustomField ID=\x22MenuDayViewEnPrevDay\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_DAY_VIEW_PREV_DAY;
+		      }
+          else if (find("<CustomField ID=\x22DefaultSubject\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DEFAULT_SUBJECT;
+		      }
+          else if (find("<CustomField ID=\x22DefaultOrganizer\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DEFAULT_ORGANIZER;
+		      }
+          else if (find("<CustomField ID=\x22RoomPrivacyLevel\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_ROOM_PRIVACY_LEVEL;
+		      }
+          else if (find("<CustomField ID=\x22IncludeInAvailRooms\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_INCLUDE_IN_AVAIL_ROOMS;
+		      }
+          else if (find("<CustomField ID=\x22EnFreeUpRoom\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_FREE_UP_ROOM;
+		      }
+          else if (find("<CustomField ID=\x22FreeUpRoomEnUseMin\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_FREE_UP_ROOM_EN_USE_MIN;
+		      }
+          else if (find("<CustomField ID=\x22FreeUpRoomEnUsePer\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_FREE_UP_ROOM_EN_USE_PER;
+		      }
+          else if (find("<CustomField ID=\x22FreeUpRoomEnMin\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_FREE_UP_ROOM_EN_MIN;
+		      }
+          else if (find("<CustomField ID=\x22FreeUpRoomEnPer\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_FREE_UP_ROOM_EN_PER;
+		      }
+          else if (find("<CustomField ID=\x22EnDeclineForNoShow\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_DECLINE_FOR_NO_SHOW;
+		      }
+          else if (find("<CustomField ID=\x22DeclineForNoShowAppliesDur\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DECLINE_FOR_NO_SHOW_APPLY_DUR;
+		      }
+          else if (find("<CustomField ID=\x22DeclineForNoShowMin\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DECLINE_FOR_NO_SHOW_MIN;
+		      }
+          else if (find("<CustomField ID=\x22DeclineForNoShowPer\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DECLINE_FOR_NO_SHOW_PER;
+		      }
+          else if (find("<CustomField ID=\x22DeclineForNoShowEnCheckAtExactMin\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DECLINE_FOR_NO_SHOW_CHECK_AT_EXACT_MIN;
+		      }
+          else if (find("<CustomField ID=\x22EnStartMeeting\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_START_MEETING;
+		      }
+          else if (find("<CustomField ID=\x22ReserveNowEvenEndTime\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_RESERVE_NOW_END_EVEN_TIME;
+		      }
+          else if (find("<CustomField ID=\x22ReserveNowTimeSelection\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_RESERVE_NOW_TIME_SELECTION;
+		      }
+          else if (find("<CustomField ID=\x22ReserveNowMaxDur\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_RESERVE_NOW_MAX_DUR;
+		      }
+          else if (find("<CustomField ID=\x22RoomFriendlyName\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_ROOM_FRIENDLY_NAME;
+		      }
+          else if (find("<CustomField ID=\x22MotionSensorType\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_MOTION_SENSOR_TYPE;
+		      }
+          else if (find("<CustomField ID=\x22MotionSensorOutput\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_MOTION_SENSOR_OUTPUT;
+		      }
+          else if (find("<CustomField ID=\x22MotionSensorTimeout\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_MOTION_SENSOR_TIMEOUT;
+		      }
+          else if (find("<CustomField ID=\x22MotionSensorLEDSTrack\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_MOTION_SENSOR_LED_TRACK;
+		      }
+          else if (find("<CustomField ID=\x22DateFormat\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_DATE_FORMAT;
+		      }
+          else if (find("<CustomField ID=\x22TimeFormat\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_TIME_FORMAT;
+		      }
+          else if (find("<CustomField ID=\x22EnBroadcastMessage\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_BROADCAST_MESSAGE;
+		      }
+          else if (find("<CustomField ID=\x22EnToolsMenu\x22", sRemoved))
+		      {
+		        iCustomID = CUSTOM_ID_EN_TOOLS_MENU;
+		      } 
+          else if (find("<CustomField ID=\x22MenuEnWakeupToMeeting\x22", sRemoved) )
+          {
+            iCustomID = CUSTOM_ID_EN_PANEL_WAKE_UP;
+          }         
+          else
+          {
+             if (debug)
+               trace ("CustomID not identified!\nsRemoved: %s", sRemoved);
+          }
+          
+ 		  	}
+		  	else
+		  	{
+	  			//Have custom id
+	  			
+	      	if (find("</CustomField>", sRemoved))
+	      	{
+	        	if (Debug)
+	        	 trace ("End Custom Field\n\n");
+             
+	        	iCustomID = 0;
+	       	}
+	       	else if (find("</CustomFieldType>", sRemoved))
+	       	{				 
+						if (find("bool", lower(sRemoved)) )
+						{
+							iCustomType = CUSTOM_TYPE_BOOL;
+						}
+						else if (find("date", lower(sRemoved) ) )
+						{
+							iCustomType = CUSTOM_TYPE_DATE;
+						}
+						else if (find("int", lower(sRemoved)))
+						{
+							iCustomType = CUSTOM_TYPE_INTEGER;
+						}
+						else if (find("string", lower(sRemoved)))
+						{
+							iCustomType = CUSTOM_TYPE_STRING;
+						}
+						else if (find("text", lower(sRemoved)))
+						{
+							iCustomType = CUSTOM_TYPE_TEXT;
+						}
+            else if (find("url", lower(sRemoved)))
+            {
+               iCustomType = CUSTOM_TYPE_URL;
+            }
+						else
+						{
+							iCustomType = 0;
+						}
+	       	}
+	       	else if (find("</CustomFieldValue>", sRemoved)) //we have a custom field value
+	       	{
+	          if (iCustomType != 0)
+	          {
+	          	if (iCustomType = CUSTOM_TYPE_BOOL)
+	          	{
+								if (find("true", lower(sRemoved)) || find("1", sRemoved))
+	          		{
+	          			bValue = TRUE;
+	          		}
+	          		else
+	          		{
+	          			bValue = FALSE;
+	          		}        		
+	          	}
+	          	else if (iCustomType = CUSTOM_TYPE_DATE || iCustomType = CUSTOM_TYPE_STRING || 
+                      iCustomType = CUSTOM_TYPE_TEXT || iCustomType = CUSTOM_TYPE_URL)
+	          	{
+	          		sValue = left(sRemoved, len(sRemoved) - 19);
+	          	}
+	          	else if (iCustomType = CUSTOM_TYPE_INTEGER)
+	          	{
+	          		iValue = atoi(sRemoved);
+	          	}
+	          	
+              count = count + 1;
+              
+              if (Debug)
+              {
+                trace("iCustomID:     %d\n", iCustomID);
+                trace("iCustomType:   %d\n", iCustomType);
+                cswitch(iCustomType)
+                {
+                  case (CUSTOM_TYPE_INTEGER):
+                  {
+                    trace("iCustomValue:  %d\n", iValue);
+                    break;
+                  }
+                  case (CUSTOM_TYPE_BOOL):
+                  {
+                    if (bValue)
+                      trace("bCustomValue:  TRUE\n");
+                    else
+                      trace("bCustomValue:  FALSE\n");
+                    break;
+                  }
+                  case (CUSTOM_TYPE_STRING):
+                  {
+                    trace("sCustomValue:  %s\n", sValue);
+                    break;
+                  }
+                }
+                trace("Custom Count: %d\n", count);
+              }
+              
+		          cswitch (iCustomID)
+		          {
+		            case(CUSTOM_ID_SHOW_MEETING_INFO):
+		            {
+		              ConfigData.MenuShowMeetingInfo = bValue; 
+		              
+		              break;
+		            }                
+		            case(CUSTOM_ID_SHOW_DAY_VIEW):
+		            {
+		              ConfigData.MenuShowDayView = bValue;
+		              break;
+		            }
+		            case(CUSTOM_ID_SHOW_AVAILABLE_ROOMS):
+		            {
+		              ConfigData.MenuShowAvailableRooms = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_SHOW_RESERVE_NOW):
+		            {
+		              ConfigData.MenuShowReserveNow = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_SHOW_SEARCH_WIZARD):
+		            {
+		              ConfigData.MenuShowSearchWizard = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_EN_DAY_VIEW_INFO):
+		            {
+		              ConfigData.MenuDayViewEnInfo = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_EN_DAY_VIEW_RESERVE):
+		            {
+		              ConfigData.MenuDayViewEnReserve = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_EN_DAY_VIEW_PREV_DAY):
+		            {
+		              ConfigData.MenuDayViewEnReserve = bValue;
+		              
+		              break;
+		            }	            	            	            	         	            	            	            	            
+		            case(CUSTOM_ID_DEFAULT_SUBJECT):
+		            {
+		              ConfigData.DefaultSubject = sValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_DEFAULT_ORGANIZER):
+		            { 
+		              ConfigData.DefaultOrganizer = sValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_ROOM_PRIVACY_LEVEL):
+		            {
+		              ConfigData.RoomPrivacyLevel = iValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_EN_DECLINE_FORNOSHOW):
+		            {
+		              ConfigData.EnDeclineForNoShow = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_DECLINE_FORNOSHOW_APPLIES_DUR):
+		            {
+		              ConfigData.DeclineForNoShowAppliesDur = iValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_DECLINE_FORNOSHOW_MIN):
+		            {
+		              ConfigData.DeclineForNoShowMin = iValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_RESERVE_NOW_MAX_DUR):
+		            {
+		              ConfigData.ReserveNowMaxDur = iValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_ROOM_FRIENDLY_NAME):
+		            {
+		              ConfigData.RoomFriendlyName = sValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_EN_TOOLS_PAGE):
+		            {
+		              ConfigData.MenuEnToolsPage = bValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_RESERVE_NOW_DEFAULT_SUBJECT):
+		            {
+		              ConfigData.ReserveNowDefaultSubject = sValue;
+		              
+		              break;
+		            }
+		            case(CUSTOM_ID_RESERVE_NOW_DEFAULT_ORGANIZER):
+		            {
+		              ConfigData.ReserveNowDefaultOrganizer = sValue;
+		              
+		              break;
+		            }
+                case (CUSTOM_ID_DATE_FORMAT):
+								{
+								  ConfigData.DateFormat = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_DECLINE_FOR_NO_SHOW_APPLY_DUR):
+								{
+								  ConfigData.DeclineForNoShowAppliesDur = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_DECLINE_FOR_NO_SHOW_CHECK_AT_EXACT_MIN):
+								{
+								  ConfigData.DeclineForNoShowEnCheckAtExactMin = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_DECLINE_FOR_NO_SHOW_MIN):
+								{
+								  ConfigData.DeclineForNoShowMin = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_DECLINE_FOR_NO_SHOW_PER):
+								{
+								  ConfigData.DeclineForNoShowPer = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_EN_BROADCAST_MESSAGE):
+								{
+								  ConfigData.EnBroadcastMessage = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_EN_DECLINE_FOR_NO_SHOW):
+								{
+								  ConfigData.EnDeclineForNoShow = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_EN_FREE_UP_ROOM):
+								{
+								  ConfigData.EnFreeUpRoom = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_EN_START_MEETING):
+								{
+						      ConfigData.EnStartMeeting = bValue;
+								  break;
+								}
+								case (CUSTOM_ID_EN_TOOLS_MENU):
+								{
+								  ConfigData.EnToolsMenu = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_EN_WAKE_UP_TO_MEETING):
+								{
+								  ConfigData.MenuEnWakeupToMeeting = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_FREE_UP_ROOM_EN_MIN):
+								{
+								  ConfigData.FreeUpRoomEnMin = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_FREE_UP_ROOM_EN_PER):
+								{
+								  ConfigData.FreeUpRoomEnPer = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_FREE_UP_ROOM_EN_USE_MIN):
+								{
+								  ConfigData.FreeUpRoomEnUseMin = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_FREE_UP_ROOM_EN_USE_PER):
+								{
+								  ConfigData.FreeUpRoomEnUsePer = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_MOTION_SENSOR_LED_TRACK):
+								{
+								  ConfigData.MotionSensorLEDSTrack = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_MOTION_SENSOR_OUTPUT):
+								{
+								  ConfigData.MotionSensorOutput = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_MOTION_SENSOR_TIMEOUT):
+								{
+								  ConfigData.MotionSensorTimeout = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_MOTION_SENSOR_TYPE):
+								{
+								  ConfigData.MotionSensorType = iValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_RESERVE_NOW_END_EVEN_TIME):
+								{
+								  ConfigData.ReserveNowEvenEndTime = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_RESERVE_NOW_TIME_SELECTION):
+								{
+								  ConfigData.ReserveNowTimeSelection = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_SHOW_AVAILABLE_TIMES):
+								{
+								  ConfigData.MenuShowAvailableTime = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_SHOW_MEETING_ORGANIZER):
+								{
+								  ConfigData.MenuShowMeetingOrganizer = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_SHOW_MEETING_SUBJECT):
+								{
+								  ConfigData.MenuShowMeetingSubject = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_SHOW_MEETING_TIMES):
+								{
+								  ConfigData.MenuShowMeetingTimes = bValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_SHOW_MENU_BKGD_IMAGE_URL):
+								{
+								  ConfigData.MenuBkgdImageURL = sValue;								
+								  
+                  break;
+								}
+								case (CUSTOM_ID_SHOW_MENU_LOGO_IMAGE_URL):
+								{
+								  ConfigData.MenuLogoImageURL = sValue;
+								
+								  break;
+								}
+								case (CUSTOM_ID_TIME_FORMAT):
+								{
+								  ConfigData.TimeFormat = bValue;
+								
+								  break;
+								}	            	            
+		          }	          	
+	          }
+	        }	
+	  		}
+	  	}  	
+  	} // End Node = CustomFields
+  	else if (iNode = NODE_CAPABILITIES)
+  	{
+  		if (find("</Capabilities>", sRemoved))
+	    {
+	      if (Debug)
+	       print ("End Capabilities\n");
+	      
+	      iNode = NODE_ROOT;
+	    }
+	    else
+	    {
+	    	if (find("<PushModel Enabled", sRemoved))
+	    	{
+	    		if (Debug)
+	    		 print ("Found PushModel\n");
+	    		
+	    		if (find("1", sRemoved))
+	    		{
+	    			Config_En_PushModel = TRUE;
+	    			ConfigData.EnPushModel = TRUE;
+	    		}
+	    		else
+	    		{
+	    			Config_En_PushModel = FALSE;
+	    			ConfigData.EnPushModel = FALSE;
+	    		}
+	    	}
+	    }
+  	}
+  	
+  } until (len(sData) = 0);
+    
+	Module_Status = MODE_IDLE;
+  
+  g_sHaveStoredConfigData = NVRAM_VAL; 
+}
+
+Function OutputCustomConfigurations()
+{
+   if (g_sHaveStoredConfigData <> NVRAM_VAL)
+     return;
+   
+   if (Debug)
+     trace ("\n** OutputCustomConfigurations **\n"); 
+   
+   //Out It!
+		Menu_En_Tools_Page = ConfigData.EnToolsMenu;
+		Menu_Show_Meeting_Info = ConfigData.MenuShowMeetingInfo;
+		Menu_Show_Day_View = ConfigData.MenuShowDayView;
+		Menu_Show_Available_Rooms = ConfigData.MenuShowAvailableRooms;
+		Menu_Show_Reserve_Now = ConfigData.MenuShowReserveNow;
+		Menu_Show_Search_Wizard = ConfigData.MenuShowSearchWizard;
+		Menu_DayView_En_Info = ConfigData.MenuDayViewEnInfo;
+		Menu_DayView_En_Add_Appt = ConfigData.MenuDayViewEnReserve;
+		Menu_DayView_En_Previous_Day = ConfigData.MenuDayViewEnPrevDay;
+		Config_En_DeclineForNoShow = ConfigData.EnDeclineForNoShow;
+		Config_En_PushModel = ConfigData.EnPushModel;
+		DeclineForNoShow_CheckAtExactMin = ConfigData.DeclineForNoShowEnCheckAtExactMin;
+		Config_En_BroadcastMessage = ConfigData.EnBroadcastMessage;
+		Config_En_FreeUpRoom = ConfigData.EnFreeUpRoom;
+		Config_En_StartMeeting = ConfigData.EnStartMeeting;
+		Config_En_PanelWakeUp = ConfigData.MenuEnWakeupToMeeting;
+		Config_FreeUpRoom_En_Min = ConfigData.FreeUpRoomEnUseMin;
+    Config_FreeUpRoom_En_Per = ConfigData.FreeUpRoomEnUsePer;
+		Config_MotionSensor_LED_Track = ConfigData.MotionSensorLEDSTrack;
+		Config_ReserveNow_Even_End_Time = ConfigData.ReserveNowEvenEndtime;
+		Config_ReserveNow_Time_Select = ConfigData.ReserveNowTimeSelection;
+		Config_En_AvailableTimes = ConfigData.MenuShowAvailableTime;
+		Menu_Show_Subject = ConfigData.MenuShowMeetingSubject;
+		Menu_Show_Organizer= ConfigData.MenuShowMeetingOrganizer;
+		Menu_Show_Times = ConfigData.MenuShowMeetingTimes;
+		Config_Time_Format = ConfigData.TimeFormat;
+		
+		Config_DeclineForNoShowAppliesDur = ConfigData.DeclineForNoShowAppliesDur;
+		Config_DeclineForNoShowMin = ConfigData.DeclineForNoShowMin;
+		Config_ReserveNowMaxDur = ConfigData.ReserveNowMaxDur;
+		Config_RoomPrivacyLevel = ConfigData.RoomPrivacyLevel;
+		Config_Date_Format = ConfigData.DateFormat;
+		Config_DeclineForNoShowPer = ConfigData.DeclineForNoShowPer;
+		Config_FreeUpRoom_EnUseMin = ConfigData.FreeUpRoomEnMin;
+		Config_FreeUpRoom_EnUsePer = ConfigData.FreeUpRoomEnPer;
+		Config_MotionSensor_Type = ConfigData.MotionSensorType;
+		Config_MotionSensor_Output = ConfigData.MotionSensorOutput;
+		Config_MotionSensor_Timeout = ConfigData.MotionSensorTimeout;
+		
+		Config_DefaultSubject$ = ConfigData.DefaultSubject;
+		Config_DefaultOrganizer$ = ConfigData.DefaultOrganizer;
+		Config_ReserveNow_DefaultSubject$ = ConfigData.DefaultSubject;
+		Config_ReserveNow_DefaultOrganizer$ = ConfigData.DefaultOrganizer;
+		Config_Menu_Show_Bkgd_Image_URL$ = ConfigData.MenuBkgdImageURL;
+		Config_Menu_Show_Logo_Image_URL$ = ConfigData.MenuLogoImageURL;
+}
+
+Function OutputGeneralRoomConfig()
+{
+  if (g_sHaveStoredConfigData <> NVRAM_VAL)
+     return;
+   
+  if (Debug)
+     trace ("\n** Output General Room Config **\n"); 
+
+  Config_RoomID$ = ConfigData.RoomID;
+  Config_RoomName$ = ConfigData.RoomName;
+  Config_RoomDescription$ = ConfigData.RoomDescription;
+  Config_RoomLocation$ = ConfigData.RoomLocation;
+  Config_RoomTimeZone$ = ConfigData.RoomTimeZone;      
+}
+
+Function ProcessFromRVRoomConfigResponse$()
+{
+  if (Debug)
+  {
+  	print ("\n** ProcessFromRVRoomConfigResponse$ **\n");
+  }
+  
+  if (find(g_sRequestID, g_sRXData))
+  {
+    Module_Status = MODE_RESPONSE;    		
+    		
+    call ProcessConfigData(g_sRXData);
+    call OutputGeneralRoomConfig();
+    call OutputCustomConfigurations();
+  }
+  else if (find("RVSERoomConfigUpdate", g_sRXData))
+  {
+    Module_Status = MODE_RESPONSE;    		
+    		
+    call ProcessConfigData(g_sRXData);
+    call OutputCustomConfigurations();
+  }
+}
+
+
+Function ClearConfigData()
+{
+  ConfigData.MenuEnToolsPage = FALSE;
+  
+  ConfigData.MenuShowMeetingInfo = FALSE;
+	ConfigData.MenuShowDayView = FALSE;
+	ConfigData.MenuShowAvailableRooms = FALSE;
+	ConfigData.MenuShowReserveNow = FALSE;
+	ConfigData.MenuShowSearchWizard = FALSE;
+
+  ConfigData.MenuShowMeetingSubject = FALSE;
+  ConfigData.MenuShowMeetingOrganizer = FALSE;
+  ConfigData.MenuShowMeetingTimes = FALSE;
+  ConfigData.MenuShowAvailableTime = FALSE;
+  ConfigData.MenuEnWakeupToMeeting = FALSE;
+	
+  ConfigData.MenuBkgdImageURL = "";
+  ConfigData.MenuLogoImageURL = "";
+  
+	ConfigData.MenuDayViewEnInfo = FALSE;
+	ConfigData.MenuDayViewEnReserve = FALSE;
+	ConfigData.MenuDayViewEnPrevDay = FALSE;
+		    
+	ConfigData.RoomID = "";
+	ConfigData.RoomName = "";
+	ConfigData.RoomFriendlyName = "";
+	ConfigData.RoomLocation = "";
+	ConfigData.RoomTimeZone = "";
+	ConfigData.DefaultSubject = "";
+	ConfigData.DefaultOrganizer = "";
+	ConfigData.ReserveNowDefaultSubject = "";
+	ConfigData.ReserveNowDefaultOrganizer = "";
+	
+	ConfigData.EnDeclineForNoShow = FALSE;
+	ConfigData.DeclineForNoShowAppliesDur = 120;
+	ConfigData.DeclineForNoShowMin = 15;
+  ConfigData.DeclineForNoShowPer = 10;
+  ConfigData.DeclineForNoShowEnCheckAtExactMin = FALSE;
+  
+	ConfigData.ReserveNowMaxDur = 60;
+  ConfigData.ReserveNowEvenEndtime = FALSE;
+  ConfigData.ReserveNowTimeSelection = FALSE;
+
+	ConfigData.RoomPrivacyLevel = 0;
+  
+	ConfigData.EnFreeUpRoom = FALSE;
+	ConfigData.FreeUpRoomEnUseMin = FALSE;
+	ConfigData.FreeUpRoomEnUsePer = FALSE;
+	ConfigData.FreeUpRoomEnMin = 0;
+	ConfigData.FreeUpRoomEnPer = 0;
+         
+  ConfigData.EnStartMeeting = FALSE;
+         
+	ConfigData.MotionSensorType = 0;
+	ConfigData.MotionSensorOutput = 0;
+	ConfigData.MotionSensorTimeout = 0;
+	ConfigData.MotionSensorLEDSTrack = FALSE;
+  
+  ConfigData.DateFormat = US_DATE_FORMAT;
+  ConfigData.TimeFormat = FALSE;
+
+  ConfigData.EnBroadcastMessage = FALSE;
+  
+  ConfigData.EnToolsMenu = FALSE;
+
+  ConfigData.EnPushModel = FALSE;  
+  
+  if (Debug)
+   print ("Cleared all stored data\n");
+}
+
+Function InitConfigData()
+{
+  ConfigData.MenuEnToolsPage = TRUE;
+
+	ConfigData.MenuShowMeetingInfo = TRUE;
+	ConfigData.MenuShowDayView = TRUE;
+	ConfigData.MenuShowAvailableRooms = TRUE;
+	ConfigData.MenuShowReserveNow = TRUE;
+	ConfigData.MenuShowSearchWizard = FALSE;
+	
+	ConfigData.MenuShowMeetingSubject = TRUE;
+	ConfigData.MenuShowMeetingOrganizer = TRUE;
+	ConfigData.MenuShowMeetingTimes = TRUE;
+	ConfigData.MenuShowAvailableTime = TRUE;
+	ConfigData.MenuEnWakeupToMeeting = TRUE;
+	
+	ConfigData.MenuBkgdImageURL = "";
+	ConfigData.MenuLogoImageURL = "";
+	
+	ConfigData.MenuDayViewEnInfo = TRUE;
+	ConfigData.MenuDayViewEnReserve = TRUE;
+	ConfigData.MenuDayViewEnPrevDay = FALSE;
+	    
+	ConfigData.RoomID = "";
+	ConfigData.RoomName = "";
+	ConfigData.RoomFriendlyName = "";
+	ConfigData.RoomLocation = "";
+	ConfigData.RoomTimeZone = "";
+	ConfigData.DefaultSubject = "Default Subject";
+	ConfigData.DefaultOrganizer = "Default Organizer";
+	ConfigData.ReserveNowDefaultSubject = "Ad-Hoc Meeting";
+	ConfigData.ReserveNowDefaultOrganizer = "Ad-Hoc Organizer";
+	
+	ConfigData.EnDeclineForNoShow = FALSE;
+	ConfigData.DeclineForNoShowAppliesDur = 120;
+	ConfigData.DeclineForNoShowMin = 15;
+	ConfigData.DeclineForNoShowPer = 10;
+	ConfigData.DeclineForNoShowEnCheckAtExactMin = FALSE;
+	
+	ConfigData.ReserveNowMaxDur = 60;
+	ConfigData.ReserveNowEvenEndtime = FALSE;
+	ConfigData.ReserveNowTimeSelection = FALSE;
+	
+	ConfigData.RoomPrivacyLevel = PUBLIC_LEVEL;
+	
+	ConfigData.EnFreeUpRoom = FALSE;
+	ConfigData.FreeUpRoomEnUseMin = TRUE;
+	ConfigData.FreeUpRoomEnUsePer = FALSE;
+	ConfigData.FreeUpRoomEnMin = 5;
+	ConfigData.FreeUpRoomEnPer = 10;
+	       
+	ConfigData.EnStartMeeting = FALSE;
+	       
+	ConfigData.MotionSensorType = 0;
+	ConfigData.MotionSensorOutput = 0;
+	ConfigData.MotionSensorTimeout = 15;
+	ConfigData.MotionSensorLEDSTrack = TRUE;
+	
+	ConfigData.DateFormat = US_DATE_FORMAT;
+	ConfigData.TimeFormat = FALSE;
+	
+	ConfigData.EnBroadcastMessage = TRUE;
+	
+	ConfigData.EnToolsMenu = TRUE;
+	
+	ConfigData.EnPushModel = FALSE;
+}
+
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+
+PUSH Initialize_Module
+{ 
+  if (Debug)
+  {
+    trace ("\n** Initialize Module **\n");
+  }
+  
+  Initialize_Module_Busy_FB = TRUE;
+  
+  g_bRXOK = TRUE;
+  
+  Module_Status = MODE_IDLE;
+  
+  if (g_sNVDataCleared <> NVRAM_VAL)
+  {
+    if (Debug)
+    {
+      trace ("Clearing Config Data\n");
+    }
+		ClearConfigData();
+    g_sNVDataCleared = NVRAM_VAL;    
+  }
+  
+  if (g_sHaveStoredConfigData <> NVRAM_VAL)
+  {
+    if (Debug)
+    {
+      trace ("Initializing Default Configurations\n");
+    }
+    
+    InitConfigData();
+    g_sHaveStoredConfigData = NVRAM_VAL;
+  }
+  
+  call OutputGeneralRoomConfig();
+  call OutputCustomConfigurations();
+  
+  Initialize_Module_Busy_FB = FALSE;
+}
+
+PUSH Clear_All_Stored_Data
+{ 
+  if (Debug)
+  {
+    trace ("\n** Clear All Stored Data **\n");
+  }
+  call ClearConfigData();
+}
+
+PUSH Data_Timeout
+{
+	Module_Status = MODE_ERROR;
+	Module_Status = MODE_IDLE;
+  
+  if (g_sHaveStoredConfigData = NVRAM_VAL)
+  {
+		OutputCustomConfigurations();
+  }    
+}
+
+//NOT NEEDED!
+PUSH Load_Stored_Values
+{
+  if (g_sHaveStoredConfigData = NVRAM_VAL)
+  {
+		Menu_En_Tools_Page = ConfigData.MenuEnToolsPage;
+		
+		Menu_Show_Meeting_Info = ConfigData.MenuShowMeetingInfo;
+		Menu_Show_Day_View = ConfigData.MenuShowDayView;
+		Menu_Show_Available_Rooms = ConfigData.MenuShowAvailableRooms;
+		Menu_Show_Reserve_Now = ConfigData.MenuShowReserveNow;
+		Menu_Show_Search_Wizard = ConfigData.MenuShowSearchWizard;
+		
+		Menu_DayView_En_Info = ConfigData.MenuDayViewEnInfo;
+		Menu_DayView_En_Add_Appt = ConfigData.MenuDayViewEnReserve;
+		Menu_DayView_En_Previous_Day = ConfigData.MenuDayViewEnPrevDay;
+	  
+	  Config_RoomID$ = ConfigData.RoomID;
+	  Config_RoomName$ = ConfigData.RoomName;
+	  Config_RoomFriendlyName$ = ConfigData.RoomFriendlyName;
+	  Config_RoomLocation$ = ConfigData.RoomLocation;
+	  Config_RoomTimeZone$ = COnfigData.RoomTimeZone;
+	  Config_DefaultSubject$ = ConfigData.DefaultSubject;
+	  Config_DefaultOrganizer$ = ConfigData.DefaultOrganizer;
+    Config_ReserveNow_DefaultSubject$ = ConfigData.ReserveNowDefaultSubject;
+	  Config_ReserveNow_DefaultOrganizer$ = ConfigData.ReserveNowDefaultOrganizer;
+	
+	  Config_En_DeclineForNoShow = ConfigData.EnDeclineForNoShow;
+	  Config_DeclineForNoShowAppliesDur = ConfigData.DeclineForNoShowAppliesDur;
+	  Config_DeclineForNoShowMin = ConfigData.DeclineForNoShowMin;
+	  Config_ReserveNowMaxDur = ConfigData.ReserveNowMaxDur;
+	  Config_RoomPrivacyLevel = ConfigData.RoomPrivacyLevel;
+	  Config_En_PushModel = ConfigData.EnPushModel;
+	}
+}
+
+PUSH Get_Configuration
+{  
+  if (Module_Status = MODE_IDLE)
+  {
+    Module_Status = MODE_REQUEST;
+    
+    g_sRequestID = "ConfigRequest" + itoa(getHSeconds());
+   	To_RV_RoomConfigQuery$ = 
+    		"<RequestRoomConfiguration>" + 
+     		"<RequestID>" + g_sRequestID + "</RequestID>" +
+    		"</RequestRoomConfiguration>";
+  }
+}
+
+
+CHANGE From_RV_RoomConfigReponse$
+{  
+  if (g_bRXOK)
+  {
+    g_bRXOK = FALSE;
+    
+    while(1)
+    {
+    	g_sRXData = gather ("</RoomConfigurationResponse>", From_RV_RoomConfigReponse$);
+    	
+      call ProcessFromRVRoomConfigResponse$();	    	
+    }
+  }       
+}
+
+PUSH UI_Config_Menu_Show_Meeting_Info
+{
+  ConfigData.MenuShowMeetingInfo = !ConfigData.MenuShowMeetingInfo;
+  OutputCustomConfigurations();
+}
+
+PUSH UI_Config_Menu_Show_Meeting_Subject
+{
+  ConfigData.MenuShowMeetingSubject = !ConfigData.MenuShowMeetingSubject;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Menu_Show_Meeting_Organizer
+{
+  ConfigData.MenuShowMeetingOrganizer = !ConfigData.MenuShowMeetingOrganizer;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Menu_Show_Meeting_Times
+{
+  ConfigData.MenuShowMeetingTimes = !ConfigData.MenuShowMeetingTimes;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Menu_Show_Day_View
+{
+  ConfigData.MenuShowDayView = !ConfigData.MenuShowDayView;
+  OutputCustomConfigurations();
+}
+
+PUSH UI_Config_Day_View_Get_Info
+{
+  ConfigData.MenuDayViewEnInfo = !ConfigData.MenuDayViewEnInfo;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Day_View_Add_Appt
+{
+  ConfigData.MenuDayViewEnReserve = !ConfigData.MenuDayViewEnReserve;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Day_View_En_Prev_Day
+{
+  ConfigData.MenuDayViewEnPrevDay = !ConfigData.MenuDayViewEnPrevDay;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Menu_Show_Avaialble_Rooms
+{
+  ConfigData.MenuShowAvailableRooms = !ConfigData.MenuShowAvailableRooms;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Menu_Show_Reserve_Now
+{
+  ConfigData.MenuShowReserveNow = !ConfigData.MenuShowReserveNow;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Reserve_Now_Max_Dur_Minus
+{
+  //subtract
+  if (ConfigData.ReserveNowMaxDur > RESERVE_NOW_MAX_DUR_MINIMUM)
+  {
+    ConfigData.ReserveNowMaxDur = ConfigData.ReserveNowMaxDur - RESERVE_NOW_MAX_DUR_BLOCK;
+  }
+  
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Reserve_Now_Max_Dur_Plus
+{
+  //add
+  if (ConfigData.ReserveNowMaxDur < RESERVE_NOW_MAX_DUR_MAXIMUM)
+  {
+    ConfigData.ReserveNowMaxDur = ConfigData.ReserveNowMaxDur + RESERVE_NOW_MAX_DUR_BLOCK;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Reserve_Now_Even_End_Time
+{
+  ConfigData.ReserveNowEvenEndtime = !ConfigData.ReserveNowEvenEndtime;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Reserve_Now_Time_Select
+{
+  ConfigData.ReserveNowTimeSelection = !ConfigData.ReserveNowTimeSelection;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Next_Reserve_Show_Info
+{
+  ConfigData.MenuShowAvailableTime = !ConfigData.MenuShowAvailableTime;
+  OutputCustomConfigurations();
+}
+
+
+PUSH UI_Config_Panel_Wake_Up_To_Meeting
+{
+  ConfigData.MenuEnWakeupToMeeting = !ConfigData.MenuEnWakeupToMeeting;
+  OutputCustomConfigurations();
+}
+
+
+
+PUSH Room_Config_En_Decline_For_No_Show
+{
+  ConfigData.EnDeclineForNoShow = !ConfigData.EnDeclineForNoShow;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Decline_For_No_Show_Apply_To_Minus
+{
+  //subtract
+  if (ConfigData.DeclineForNoShowAppliesDur > 30)
+  {
+    ConfigData.DeclineForNoShowAppliesDur = ConfigData.DeclineForNoShowAppliesDur - 5;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Decline_For_No_Show_Apply_To_Plus
+{
+  //add
+  if (ConfigData.DeclineForNoShowAppliesDur < 480)
+  {
+    ConfigData.DeclineForNoShowAppliesDur = ConfigData.DeclineForNoShowAppliesDur + 5;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Decline_For_No_Show_After_Minus
+{
+  //subtract
+  if (ConfigData.DeclineForNoShowMin > 1)
+  {
+    ConfigData.DeclineForNoShowMin = ConfigData.DeclineForNoShowMin - 1;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Decline_For_No_Show_After_Plus
+{
+  //add
+  if (ConfigData.DeclineForNoShowMin < 120)
+  {
+    ConfigData.DeclineForNoShowMin = ConfigData.DeclineForNoShowMin + 1;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Decline_For_No_Show_Check_On_Exact_Min
+{
+  ConfigData.DeclineForNoShowEnCheckAtExactMin = !ConfigData.DeclineForNoShowEnCheckAtExactMin;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Privacy_Level_Public
+{
+  ConfigData.RoomPrivacyLevel = PUBLIC_LEVEL;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Privacy_Level_Semi
+{
+  ConfigData.RoomPrivacyLevel = SEMI_LEVEL;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Privacy_Level_Private
+{
+  ConfigData.RoomPrivacyLevel = PRIVATE_LEVEL;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Motion_Sensor_Type
+{
+  //integer toggle Intelligent/Basic
+  //pseudo toggle
+  if (ConfigData.MotionSensorType = INTELLIGENT_MOTION_SENSOR)
+  {
+    ConfigData.MotionSensorType = BASIC_MOTION_SENSOR;
+  }
+  else if (ConfigData.MotionSensorType = BASIC_MOTION_SENSOR)
+  {
+    ConfigData.MotionSensorType = INTELLIGENT_MOTION_SENSOR;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Motion_Sensor_Output
+{
+  //integer toggle Noromally Open/Closed
+  if (ConfigData.MotionSensorOutput = NORMAL_OPEN_OUTPUT_MOTION_SENSOR)
+  {
+    ConfigData.MotionSensorOutput = NORMAL_CLOSE_OUTPUT_MOTION_SENSOR;
+  }
+  else if (ConfigData.MotionSensorOutput = NORMAL_CLOSE_OUTPUT_MOTION_SENSOR)
+  {
+    ConfigData.MotionSensorOutput = NORMAL_OPEN_OUTPUT_MOTION_SENSOR;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Motion_Sensor_Release_Time_Minus
+{
+  //subtract
+  if (ConfigData.MotionSensorTimeout > 2)
+  {
+    ConfigData.MotionSensorTimeout = ConfigData.MotionSensorTimeout - 1;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_Motion_Sensor_Release_Time_Plus
+{
+  //add
+  if (ConfigData.MotionSensorTimeout < 60)
+  {
+    ConfigData.MotionSensorTimeout = ConfigData.MotionSensorTimeout + 1;
+  }
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_En_End_Meeting_Btn
+{
+  ConfigData.EnFreeUpRoom = !ConfigData.EnFreeUpRoom;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_En_Start_Meeting_Btn
+{
+  ConfigData.EnStartMeeting = !ConfigData.EnStartMeeting;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Room_Config_En_Broadcast_Message
+{
+  ConfigData.EnBroadcastMessage = !ConfigData.EnBroadcastMessage;
+  OutputCustomConfigurations();
+}
+
+
+
+PUSH Date_Format_US
+{
+  ConfigData.DateFormat = US_DATE_FORMAT;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Date_Format_Euro
+{
+  ConfigData.DateFormat = EURO_DATE_FORMAT;
+  OutputCustomConfigurations();
+}
+
+
+PUSH Date_Format_Int
+{
+  ConfigData.DateFormat = INT_DATE_FORMAT;
+  OutputCustomConfigurations();
+}
+
+
+
+PUSH Time_Format
+{
+  ConfigData.TimeFormat = !ConfigData.TimeFormat;
+  OutputCustomConfigurations();
+}
+
+CHANGE DefaultSubject$
+{
+  ConfigData.DefaultSubject = DefaultSubject$;
+  //? ConfigData.ReserveNowDefaultSubject = DefaultSubject$;
+  OutputCustomConfigurations();
+}
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+/*
+Function Main()
+{
+  WaitForInitializationComplete();
+  g_bRXOK = TRUE;
+  g_iDataIndex = 0;
+}
+*/

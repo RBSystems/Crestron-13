@@ -1,0 +1,107 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.04.01
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,718,756,854,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=RVSE2_Meeting_Preset_Interface_v1.1+
+  SmplCName=RVSE2_Meeting_Preset_Interface_v1.1+.usp
+  Code=1
+  SysRev5=4.006
+  SMWRev=3.00.00
+  InputCue1=Debug
+  InputSigType1=Digital
+  InputCue2=SchedInterWork_Mod_Connected
+  InputSigType2=Digital
+  InputCue3=Start_Meeting
+  InputSigType3=Digital
+  InputCue4=End_Meeting
+  InputSigType4=Digital
+  OutputCue1=Enable_Start_Meeting_Button
+  OutputSigType1=Digital
+  InputList2Cue1=From_SchedInterWork_Mod_DataOut$
+  InputList2SigType1=Serial
+  OutputList2Cue1=Preset_Slot
+  OutputList2SigType1=Analog
+  OutputList2Cue2=To_SchedInterWork_Mod_DataIn$
+  OutputList2SigType2=Serial
+  OutputList2Cue3=Start_Meeting_Button_Label$
+  OutputList2SigType3=Serial
+  OutputList2Cue4=Preset_Image1$
+  OutputList2SigType4=Serial
+  OutputList2Cue5=Preset_Image2$
+  OutputList2SigType5=Serial
+  OutputList2Cue6=Preset_Welcome_Msg$
+  OutputList2SigType6=Serial
+  OutputList2Cue7=Preset_Name$
+  OutputList2SigType7=Serial
+  OutputList2Cue8=Preset_Field_Slot_Label$[1]
+  OutputList2SigType8=Serial
+  OutputList2Cue9=Preset_Field_Slot_Label$[2]
+  OutputList2SigType9=Serial
+  OutputList2Cue10=Preset_Field_Slot_Label$[3]
+  OutputList2SigType10=Serial
+  OutputList2Cue11=Preset_Field_Slot_Label$[4]
+  OutputList2SigType11=Serial
+  OutputList2Cue12=Preset_Field_Slot_Label$[5]
+  OutputList2SigType12=Serial
+  OutputList2Cue13=Preset_Field_Slot_Value$[#]
+  OutputList2SigType13=Serial
+  ParamCue1=[Reference Name]
+  MinVariableInputs=4
+  MaxVariableInputs=4
+  MinVariableInputsList2=1
+  MaxVariableInputsList2=1
+  MinVariableOutputs=1
+  MaxVariableOutputs=1
+  MinVariableOutputsList2=13
+  MaxVariableOutputsList2=17
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=32
+  Hint=
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_RVSE2_Meeting_Preset_Interface_v1_1_
+  SymJam=NonExclusive
+  FileName=RVSE2_Meeting_Preset_Interface_v1.1+.ush
+  SIMPLPlusModuleEncoding=0
+  clz1=Cisco SX80 Corporate Phone Book
+  clz2=Cisco SX80 Phone Book
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]

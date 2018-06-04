@@ -1,0 +1,451 @@
+/*
+Brian J. Magrogan
+Room Information Helper
+*/
+
+#CATEGORY "9" // Memory
+#Symbol_Name "Room Information Helper v1"
+#Default_Volatile
+#ENABLE_STACK_CHECKING
+
+#Help_Begin
+Module assists in the room information control
+#Help_End
+
+/*** I/O ***/
+
+Digital_Input 	_skip_, Update_Room_Info_b, _skip_, Room_Info_Save_b;
+String_Input 	_skip_, _skip_, RoomName_Save[60], RoomNumber_Save[60], RoomIP_Save[60], RoomAdditional_Save[120], _skip_, FileName[60], FileLocation[60];
+Digital_Output	_skip_, Room_Info_Update_Busy_fb, _skip_, Room_Info_Save_Busy_fb, Room_Info_Save_Complete_Pulse;
+String_Output 	_skip_, Room_Name, Room_Number, Room_IP, Room_Additional;
+
+/*** Parameters ***/        
+
+Integer_Parameter	DebugMode; 
+
+#Begin_Parameter_Properties DebugMode
+	propValidUnits = unitDecimal;
+	propDefaultValue= 0d;
+	propList={ 0d,"Debug Mode Off" },{ 1d,"Debug Mode On" };
+#End_Parameter_Properties
+
+/*** Variables ***/
+
+integer 		g_Debug, g_File_Result, g_Parse_Result, g_File_Ok, g_Count, g_File_Location_Type, g_Data_Type;
+		
+string 			g_FileName[60], g_FileLocation[60], g_TotalFile[160], g_sTemp[600], g_RoomName_txt[60], g_RoomNumber_txt[60], g_RoomIP_txt[60], g_RoomAdditional_txt[120];
+
+/*** Functions ***/
+
+function ReadFileLocal()
+{
+	integer			FileReadOk;
+	signed_integer 	nFileHandle, nNumRead;		//File Handle
+	
+	FileReadOk = 0;
+
+    startfileoperations();
+        
+		//g_File_Location_Type = 0 = NVRAM        
+        //g_File_Location_Type = 1 = Compact Flash
+        
+		if(g_File_Location_Type	= 0)
+		{
+			if(checkfornvramdisk())
+			{
+				FileReadOk = 1;
+				if(g_Debug) Print ("NVRAM Disk Ok\n");
+			}
+			else
+			{
+				FileReadOk = 0;
+				if(g_Debug) Print ("NVRAM Disk Missing\n");
+			}
+		}
+		else
+		{
+			if(checkfordisk())
+			{
+				FileReadOk = 1;
+				if(g_Debug) Print ("Compact Flash Ok\n");
+			}
+			else
+			{
+				FileReadOk = 0;
+				if(g_Debug) Print ("Compact Flash Missing\n");
+			}
+		}			
+		
+		if(FileReadOk) //Check to ensure a compact flash card exsists or NVRAM disk exsists
+        {
+	        if(g_Debug) Print("g_TotalFile = %s\n", g_TotalFile);
+	        
+	        if(g_Debug)
+	        {
+	        	nFileHandle = FileOpen("\\NVRAM\\RoomInfo.ini", _O_RDONLY | _O_TEXT);
+	        }
+	        else
+	        {
+	        	nFileHandle = FileOpen(g_TotalFile, _O_RDONLY | _O_TEXT);
+	        }
+	        
+	        if(g_Debug)
+			{
+				Print ("FileOpen Complete\n");
+				Print("nFileHandle = %u\n", nFileHandle);
+			}
+	
+			if ( nFileHandle >= 0 ) 
+			{
+				nNumRead=FileRead( nFileHandle, g_sTemp, 20000);
+	
+				if(nNumRead<0)
+				{
+					if(g_Debug) Print ("File Read Error\n");
+					g_File_Result = 2;
+				}
+				else
+				{
+					g_File_Result = 1;
+				}
+				FileClose( nFileHandle );
+	        }
+	        else
+	        {
+	         	if(g_Debug)
+				{
+					Print ("nFileHandle Error\n");
+					Print ("g_TotalFile = %s\n", g_TotalFile);
+				}
+				g_File_Result = 2;
+	        }
+		}
+		else
+		{
+			g_File_Result = 2;
+			if (g_Debug) Print ("No Compact Flash or NVRAM disk exsists\n");		
+		}
+	endfileoperations();
+}
+
+integer_function DataType(string testdata)
+{
+ 	if(find("RoomName", testdata))
+	{
+		g_Data_Type = 1;
+		return(1);
+	}
+	else if(find("RoomNumber", testdata))
+	{
+		g_Data_Type = 2;
+		return(2);
+	}
+    else if(find("RoomIP", testdata))
+	{
+		g_Data_Type = 3;
+		return(3);
+	}
+	else if(find("RoomAdditionalInfo", testdata))
+	{
+		g_Data_Type = 4;
+		return(4);
+	}
+	else
+	{
+		g_Data_Type = 0;
+		return(0);
+	}		
+}
+
+function ParseData()
+{
+ 	integer startofdata, endofdata, datatypeval;
+ 	string	sTemp[150];
+ 	
+ 	startofdata = 0;
+	endofdata = 0;
+ 	
+ 	while(g_sTemp <> "")
+ 	{			        
+		sTemp = remove("\n", g_sTemp);
+		
+		startofdata = find("=", sTemp) + 1;
+		endofdata = find("\n", sTemp, startofdata);
+
+		datatypeval = DataType(sTemp);
+		wait(50);
+		
+        if(datatypeval = 1)
+		{
+			g_RoomName_txt = mid(sTemp, startofdata, endofdata - startofdata);
+			Room_Name = g_RoomName_txt;
+		}
+		else if(datatypeval = 2)
+		{
+         	g_RoomNumber_txt = mid(sTemp, startofdata, endofdata - startofdata);
+			Room_Number = g_RoomNumber_txt;
+		}
+		else if(datatypeval = 3)
+		{
+         	g_RoomIP_txt = mid(sTemp, startofdata, endofdata - startofdata);
+			Room_IP = g_RoomIP_txt;
+		}
+		else if(datatypeval = 4)
+		{
+         	g_RoomAdditional_txt = mid(sTemp, startofdata, endofdata - startofdata);
+			Room_Additional = g_RoomAdditional_txt;
+		}
+ 	}
+ 	g_Parse_Result = 1; 		
+}
+
+function ReadRoomInfo()
+{
+	 if (Room_Info_Update_Busy_fb = 0)
+	 {
+	 	Room_Info_Update_Busy_fb = 1;
+	 	
+	 	g_File_Result = 0;
+	 	g_Parse_Result = 0;
+		
+		if(g_Debug) Print("Start List Update\n");
+		
+		wait(100)
+		
+		if(g_Debug) Print("Update List: Call ReadFileLocal\n");
+		
+		ReadFileLocal();
+				
+		while(g_File_Result = 0)
+		{
+			processlogic();
+		}
+		
+		if(g_Debug) Print("ReadFile Finished\n");
+		
+		ParseData();
+		
+		while(g_Parse_Result = 0)
+		{
+			processlogic();
+		}
+		
+		if(g_Debug) Print("ParseData Finished\n");
+				
+		Room_Info_Update_Busy_fb = 0;
+		
+		if(g_Debug) Print("Update List Finished\n");
+	} 
+}
+
+function SaveRoomInfo(string newname, string newnumber, string newip, string newadditionalinfo)
+{
+	integer	x, FileLen, FileWriteOk;
+	signed_integer nFileHandle, nNumWrite;		//File Handle
+	string	FileTemp[1000];
+	
+	FileTemp = "";
+	FileWriteOk = 0;
+	
+    if(g_File_Location_Type	= 0)
+	{
+		if(checkfornvramdisk())
+		{
+			FileWriteOk = 1;
+			if(g_Debug) Print ("NVRAM Disk Ok\n");
+		}
+		else
+		{
+			FileWriteOk = 0;
+			if(g_Debug) Print ("NVRAM Disk Missing\n");
+		}
+	}
+	else
+	{
+		if(checkfordisk())
+		{
+			FileWriteOk = 1;
+			if(g_Debug) Print ("Compact Flash Ok\n");
+		}
+		else
+		{
+			FileWriteOk = 0;
+			if(g_Debug) Print ("Compact Flash Missing\n");
+		}
+	}
+
+	startfileoperations();
+        
+        if(FileWriteOk) //Check to ensure a compact flash card exsists or NVRAM disk exsists
+        {
+        
+	        if(g_Debug) Print ("Compact Flash or NVRAM Disk Ok\n");
+	        
+	        if(g_Debug)
+	        {
+	        	nFileHandle = FileOpen("\\NVRAM\\RoomInfo.ini", _O_WRONLY | _O_CREAT | _O_TRUNC | _O_TEXT);
+	        }
+	        else
+	        {
+	        	nFileHandle = FileOpen(g_TotalFile, _O_WRONLY | _O_CREAT | _O_TRUNC | _O_TEXT);
+	        }
+	        
+	        if(g_Debug)
+			{
+				Print ("FileOpen Complete\n");
+				Print("nFileHandle = %u\n", nFileHandle);
+			}
+	
+			if ( nFileHandle >= 0 ) 
+			{
+				makestring(FileTemp, "RoomName=%s\n", newname);
+				makestring(FileTemp, "%sRoomNumber=%s\n", FileTemp, newnumber);
+ 				makestring(FileTemp, "%sRoomIP=%s\n", FileTemp, newip);
+				makestring(FileTemp, "%sRoomAdditionalInfo=%s\n", FileTemp, newadditionalinfo);
+				
+				FileLen = len(FileTemp); 
+				
+				if(g_Debug) Print ( "FileTemp = %s\n", FileTemp);
+				if(g_Debug) Print ( "FileLen = %u\n", FileLen);
+				 
+				nNumWrite = FileWrite( nFileHandle, FileTemp, FileLen );
+				FileClose( nFileHandle );
+				
+				if ( g_Debug && (nNumWrite < 0) ) Print("Error Writing to File\n"); 
+	        }
+	        else
+	        {
+	         	if(g_Debug) Print ("nFileHandle Error\n");
+	        }
+		}
+		else
+		{
+			if (g_Debug)
+			{
+				Print ("No Compact Flash or NVRAM disk exsists\n");
+			}		
+		}
+	endfileoperations();
+	
+	pulse( 10, Room_Info_Save_Complete_Pulse );
+	Room_Info_Save_Busy_fb = 0;
+	ReadRoomInfo();
+}
+	
+
+/*** I/O ***/
+
+Change FileName
+{
+	g_FileName = FileName;
+	g_TotalFile = g_FileLocation + g_FileName;
+	
+	g_File_Ok = 1;
+	
+	if(g_Debug)
+	{
+		Print("g_FileName = %s\n", g_FileName);
+		Print("g_TotalFile = %s\n", g_TotalFile);
+	}
+}
+
+Change FileLocation
+{
+	g_FileLocation = FileLocation;
+
+	if(g_FileLocation = "\\CF0\\")
+	{
+		g_File_Location_Type = 1;
+	}
+	else
+	{
+		g_File_Location_Type = 0;
+	}
+
+	if(g_Debug)
+	{
+		Print("g_FileLocation = %s\n", g_FileLocation);
+		Print("g_TotalFile = %s\n", g_TotalFile);
+		Print("g_File_Location_Type = %u\n", g_File_Location_Type);
+	}
+}
+
+Push Update_Room_Info_b
+{
+	ReadRoomInfo();
+}
+
+Push Room_Info_Save_b
+{
+	if(Room_Info_Update_Busy_fb = 0)
+	{
+		Room_Info_Save_Busy_fb = 1;
+		SaveRoomInfo(g_RoomName_txt, g_RoomNumber_txt, g_RoomIP_txt, g_RoomAdditional_txt);
+	} 		 	
+}
+
+Change RoomName_Save
+{
+ 	g_RoomName_txt = RoomName_Save;
+}
+
+Change RoomNumber_Save
+{
+	g_RoomNumber_txt = RoomNumber_Save;
+}
+
+Change RoomIP_Save
+{
+	g_RoomIP_txt = RoomIP_Save;
+}
+
+Change RoomAdditional_Save
+{
+ 	g_RoomAdditional_txt = RoomAdditional_Save;
+}
+
+/*** Main ***/
+
+FUNCTION MAIN()
+{	
+	g_Debug = DebugMode;
+	g_File_Result = 0;
+	g_Parse_Result = 0;
+	g_File_Ok = 0;
+	g_Count = 0;
+	g_Data_Type = 0;
+	g_RoomName_txt = "";
+	g_RoomNumber_txt = "";
+	g_RoomIP_txt = "";
+	g_RoomAdditional_txt = "";
+	
+	while(g_File_Ok = 0)
+	{
+		
+		wait(100)
+		{
+			g_Count = g_Count + 1;
+		}
+		
+		if(g_Count = 10) //File Timeout
+		{
+			g_File_Ok = 1;
+		}
+		
+		processlogic();
+	}
+	
+	ReadFileLocal();
+	
+	while(g_File_Result = 0)
+	{
+		processlogic();
+	}
+	
+	ParseData();
+	
+	while(g_Parse_Result = 0)
+	{
+		processlogic();
+	}
+}

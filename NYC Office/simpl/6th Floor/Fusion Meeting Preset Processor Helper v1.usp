@@ -1,0 +1,324 @@
+/*
+Brian J. Magrogan
+Fusion Meeting Preset Processor Helper v1
+*/
+
+#Category "7" // Sequencing Operations
+#Symbol_Name "Fusion Meeting Preset Processor Helper v1"
+
+#Default_Volatile
+#Enable_Stack_Checking
+#Enable_Trace
+
+#Define_Constant ciTrue									1
+#Define_Constant ciFalse								0
+
+#Define_Constant ciMax_Presets_Slots					5
+#Define_Constant ciMax_Presets_Value_Slots				5
+#Define_Constant ciMax_Presets_Name_Length				100
+
+#Define_Constant ciMax_Audio_Number_Length				50
+#Define_Constant ciMax_Audio_Passcode_Length			15
+#Define_Constant ciMax_Video_Number_Length				50
+
+#Define_Constant ciPresentationCase						1
+#Define_Constant ciAudioCallCase						2
+#Define_Constant ciVideoCallCase						3
+#Define_Constant ciAudioVideoCallCase					4
+#Define_Constant ciPresAudioVideoCallCase				5
+
+
+/*** I/O ***/
+
+Digital_Input	_skip_, Setup_Meeting_Now_b;
+String_Input	_skip_, _skip_, _skip_, _skip_, _skip_, Fusion_Preset_Name_txt$[ciMax_Presets_Name_Length], _skip_, _skip_, _skip_, Audio_Call_Number_Slot_Label_txt$[ciMax_Presets_Name_Length],
+				Audio_Call_Passcode_Slot_Label_txt$[ciMax_Presets_Name_Length], _skip_, Video_Call_Number_Slot_Label_txt$[ciMax_Presets_Name_Length], _skip_,
+				Preset_Name_txt$[ciMax_Presets_Slots][ciMax_Presets_Name_Length], _skip_, Preset_Slot_Label$[ciMax_Presets_Value_Slots][ciMax_Presets_Name_Length], _skip_,
+				Preset_Slot_Value$[ciMax_Presets_Value_Slots][ciMax_Presets_Name_Length];							  
+
+Digital_Output 	_skip_, Presentation_Setup_Pulse, Audio_Call_Setup_Pulse, Video_Call_Setup_Pulse, Audio_Video_Call_Setup_Pulse, Pres_Audio_Video_Call_Setup_Pulse, _skip_,
+				Audio_Call_Dial_Pulse, Video_Call_Dial_Pulse, Audio_Video_Call_Dial_Pulse; 
+String_Output 	_skip_, Audio_Call_Number_txt$, Audio_Call_Passcode_txt$, _skip_, Video_Call_Number_txt$;
+
+
+/*** Parameters ***/        
+
+Integer_Parameter	DebugMode; 
+
+#Begin_Parameter_Properties DebugMode
+	propValidUnits = unitDecimal;
+	propDefaultValue= 0d;
+	propList={ 0d,"Debug Mode Off" },{ 1d,"Debug Mode On" };
+#End_Parameter_Properties
+
+
+/*** Structures ***/
+
+
+/*** Variables ***/
+
+String		g_sFusionPresetName$[ciMax_Presets_Name_Length], g_sAudioCallNumberSlotLabel$[ciMax_Presets_Name_Length], g_sAudioCallPasscodeSlotLabel$[ciMax_Presets_Name_Length],
+			g_sVideoCallNumberSlotLabel$[ciMax_Presets_Name_Length], g_sPresetName$[ciMax_Presets_Slots][ciMax_Presets_Name_Length],
+			g_sPresetSlotLabel$[ciMax_Presets_Value_Slots][ciMax_Presets_Name_Length], g_sPresetSlotValue$[ciMax_Presets_Value_Slots][ciMax_Presets_Name_Length];
+
+/*** Functions ***/
+
+String_Function fnFindAudioNumber()
+{
+    integer j;
+	string sAudioNumber$[ciMax_Audio_Number_Length], sAudioNumberTemp$[ciMax_Audio_Number_Length], sTemp$[1];
+
+	if(DebugMode) Print("Inside fnFindAudioNumber\nciMax_Presets_Value_Slots = %u\n", ciMax_Presets_Value_Slots);
+
+	for(j = 1 to ciMax_Presets_Value_Slots)
+	{
+     	if(DebugMode) Print("Inside fnFindAudioNumber for loop\ng_sPresetSlotLabel$[j] = %s\nAudio_Call_Number_Slot_Label_txt$ = %s\n", g_sPresetSlotLabel$[j], Audio_Call_Number_Slot_Label_txt$);
+		if(g_sPresetSlotLabel$[j] = Audio_Call_Number_Slot_Label_txt$)
+		{
+			makestring(sAudioNumberTemp$, "%s", g_sPresetSlotValue$[j]);
+			if(DebugMode) Print("if(g_sPresetSlotLabel$[j] = Audio_Call_Number_Slot_Label_txt$) = True\nsAudioNumberTemp$ = %s\n", sAudioNumberTemp$);
+			break;
+		}
+	}
+
+	if(find("-", sAudioNumberTemp$) || find("(", sAudioNumberTemp$) || find(")", sAudioNumberTemp$) || find(".", sAudioNumberTemp$))	//The number needs to be adjusted to go out to the dialer
+	{
+     	if(DebugMode) Print("Audio number contains a -, (, ) or .\n");
+		while(sAudioNumberTemp$ <> "")
+		{
+			sTemp$ = remove(left(sAudioNumberTemp$, 1), sAudioNumberTemp$);
+			if(sAudioNumber$ = "")
+			{
+               makestring(sAudioNumber$, "%s", sTemp$);
+			}
+			else
+			{
+             	makestring(sAudioNumber$, "%s%s", sAudioNumber$, sTemp$);
+			}
+		}
+		if(DebugMode) Print("New audio number = %s\n", sAudioNumber$);
+	}
+	else
+	{
+        makestring(sAudioNumber$,"%s", sAudioNumberTemp$);
+	}   
+     	
+	return(sAudioNumber$);
+}
+
+String_Function fnFindAudioPasscode()
+{
+    integer j;
+	string sAudioPasscode$[ciMax_Audio_Number_Length], sAudioPasscodeTemp$[ciMax_Audio_Number_Length], sTemp$[1];
+
+	if(DebugMode) Print("Inside fnFindAudioPasscode\nciMax_Presets_Value_Slots = %u\n", ciMax_Presets_Value_Slots);
+    
+	for(j = 1 to ciMax_Presets_Value_Slots)
+	{
+     	if(DebugMode) Print("Inside fnFindAudioPasscode for loop\ng_sPresetSlotLabel$[j] = %s\nAudio_Call_Passcode_Slot_Label_txt$ = %s\n", g_sPresetSlotLabel$[j], Audio_Call_Passcode_Slot_Label_txt$);
+		if(g_sPresetSlotLabel$[j] = Audio_Call_Passcode_Slot_Label_txt$)
+		{
+			makestring(sAudioPasscodeTemp$, "%s", g_sPresetSlotValue$[j]);
+			if(DebugMode) Print("if(g_sPresetSlotLabel$[j] = Audio_Call_Passcode_Slot_Label_txt$) = True\nsAudioPasscodeTemp$ = %s", sAudioPasscodeTemp$);
+			break;
+		}
+	}
+
+	if(find("-", sAudioPasscodeTemp$) || find("(", sAudioPasscodeTemp$) || find(")", sAudioPasscodeTemp$))	//The number needs to be adjusted to go out to the dialer
+	{
+     	if(DebugMode) Print("Audio passcode contains a -, (, ) or .\n");
+		while(sAudioPasscodeTemp$ <> "")
+		{
+			sTemp$ = remove(left(sAudioPasscodeTemp$, 1), sAudioPasscodeTemp$);
+			if(sAudioPasscode$ = "")
+			{
+               makestring(sAudioPasscode$, "%s", sTemp$);
+			}
+			else
+			{
+             	makestring(sAudioPasscode$, "%s%s", sAudioPasscode$, sTemp$);
+			}
+		}
+		if(DebugMode) Print("New audio passcode = %s\n", sAudioPasscode$);
+	}
+	else
+	{
+        makestring(sAudioPasscode$,"%s", sAudioPasscodeTemp$);
+	}
+
+	return(sAudioPasscode$);
+}
+
+String_Function fnFindVideoNumber()
+{
+    integer j;
+	string sVideoNumber$[ciMax_Video_Number_Length], sVideoNumberTemp$[ciMax_Video_Number_Length], sTemp$[1];
+
+	for(j = 1 to ciMax_Presets_Value_Slots)
+	{
+     	if(g_sPresetSlotLabel$[j] = Video_Call_Number_Slot_Label_txt$)
+		{
+			makestring(sVideoNumberTemp$, "%s", g_sPresetSlotValue$[j]);
+			break;
+		}
+	}
+
+	if(find("-", sVideoNumberTemp$) || find("(", sVideoNumberTemp$) || find(")", sVideoNumberTemp$))	//The number needs to be adjusted to go out to the dialer
+	{
+     	while(sVideoNumberTemp$ <> "")
+		{
+			sTemp$ = remove(left(sVideoNumberTemp$, 1), sVideoNumberTemp$);
+			if(sVideoNumber$ = "")
+			{
+               	makestring(sVideoNumber$, "%s", sTemp$);
+			}
+			else
+			{
+             	makestring(sVideoNumber$, "%s%s", sVideoNumber$, sTemp$);
+			}
+		}
+	}
+	else
+	{
+        makestring(sVideoNumber$,"%s", sVideoNumberTemp$);
+	}   
+
+	return(sVideoNumber$);
+}
+
+
+/*** Events ***/
+
+Push Setup_Meeting_Now_b
+{
+	integer	i, iPreset;
+
+	iPreset = 999;
+
+	for(i = 1 to ciMax_Presets_Slots)
+	{
+		if(g_sFusionPresetName$ = g_sPresetName$[i])
+		{
+			iPreset = i;
+			if(DebugMode) Print("if(g_sFusionPresetName$ = g_sPresetName$[i]) = True\niPreset = %u\n", iPreset);
+			break;	
+		}
+	}
+
+	switch(iPreset)
+	{
+     	case(ciPresentationCase):
+		{
+         	if(DebugMode) Print("case(ciPresentationCase)\n");
+			makestring(Audio_Call_Number_txt$, "");
+			makestring(Audio_Call_Passcode_txt$, "");
+			makestring(Video_Call_Number_txt$, "");
+			Pulse(10, Presentation_Setup_Pulse); 	
+		}
+        case(ciAudioCallCase):
+		{
+            if(DebugMode) Print("case = ciAudioCallCase\n");
+			makestring(Audio_Call_Number_txt$, "%s", fnFindAudioNumber());
+			makestring(Audio_Call_Passcode_txt$, "%s", fnFindAudioPasscode());
+			makestring(Video_Call_Number_txt$, "");
+			Pulse(10, Audio_Call_Setup_Pulse);
+			Pulse(10, Audio_Call_Dial_Pulse);
+		}
+		case(ciVideoCallCase):
+		{
+         	if(DebugMode) Print("case = ciVideoCallCase\n");
+			makestring(Audio_Call_Number_txt$, "");
+			makestring(Audio_Call_Passcode_txt$, "");
+			makestring(Video_Call_Number_txt$, "%s", fnFindVideoNumber());
+			Pulse(10, Video_Call_Setup_Pulse);
+			Pulse(10, Video_Call_Dial_Pulse);
+		}
+		case(ciAudioVideoCallCase):
+		{
+            if(DebugMode) Print("case = ciAudioVideoCallCase\n");
+			makestring(Audio_Call_Number_txt$, "%s", fnFindAudioNumber());
+			makestring(Audio_Call_Passcode_txt$, "%s", fnFindAudioPasscode());
+			makestring(Video_Call_Number_txt$, "%s", fnFindVideoNumber());
+			Pulse(10, Audio_Video_Call_Setup_Pulse);
+			Pulse(10, Audio_Video_Call_Dial_Pulse);
+		}
+		case(ciPresAudioVideoCallCase):
+		{
+            if(DebugMode) Print("case = ciPresAudioVideoCallCase\n");
+			makestring(Audio_Call_Number_txt$, "%s", fnFindAudioNumber());
+			makestring(Audio_Call_Passcode_txt$, "%s", fnFindAudioPasscode());
+			makestring(Video_Call_Number_txt$, "%s", fnFindVideoNumber());
+			Pulse(10, Pres_Audio_Video_Call_Setup_Pulse);
+			Pulse(10, Audio_Video_Call_Dial_Pulse);
+		}
+	}
+}
+
+Change Fusion_Preset_Name_txt$
+{
+ 	makestring(g_sFusionPresetName$, "%s", Fusion_Preset_Name_txt$);
+}
+
+Change Audio_Call_Number_Slot_Label_txt$
+{
+ 	makestring(g_sAudioCallNumberSlotLabel$, "%s", Audio_Call_Number_Slot_Label_txt$);
+}
+
+Change Audio_Call_Passcode_Slot_Label_txt$
+{
+    makestring(g_sAudioCallPasscodeSlotLabel$, "%s", Audio_Call_Passcode_Slot_Label_txt$);
+}
+
+Change Video_Call_Number_Slot_Label_txt$
+{
+    makestring(g_sVideoCallNumberSlotLabel$, "%s", Video_Call_Number_Slot_Label_txt$);
+}
+
+Change Preset_Name_txt$
+{
+ 	Integer i;
+
+	i = getlastmodifiedarrayindex();
+	makestring(g_sPresetName$[i], "%s", Preset_Name_txt$[i]); 
+}
+
+Change Preset_Slot_Label$
+{
+  	 Integer i;
+
+	i = getlastmodifiedarrayindex();
+	makestring(g_sPresetSlotLabel$[i], "%s", Preset_Slot_Label$[i]);
+}
+
+Change Preset_Slot_Value$
+{
+  	 Integer i;
+
+	i = getlastmodifiedarrayindex();
+	makestring(g_sPresetSlotValue$[i], "%s", Preset_Slot_Value$[i]);
+}
+
+/*** Main ***/
+
+Function Main()
+{
+	integer i;
+
+	i = 0;
+
+	WaitForInitializationComplete();
+	
+	makestring(g_sFusionPresetName$, "");
+	makestring(g_sAudioCallNumberSlotLabel$, "");
+    makestring(g_sAudioCallPasscodeSlotLabel$, "");
+    makestring(g_sVideoCallNumberSlotLabel$, "");
+
+	While(i < ciMax_Presets_Slots)
+	{
+     	makestring(g_sPresetSlotLabel$[i], "");
+		makestring(g_sPresetSlotValue$[i], "");
+		i = i + 1;
+	}
+}
+
+

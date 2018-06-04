@@ -1,0 +1,849 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name: Control Concepts, Inc.
+System Name: Biamp Tesira Command Processor v1.4
+System Number:
+Programmer: JJM
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+// #ENABLE_DYNAMIC
+// #SYMBOL_NAME ""
+// #HINT ""
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+#DEFINE_CONSTANT QTY_OF_QUEUES 2
+#DEFINE_CONSTANT MAX_COMMAND_QUEUE_ITEMS 50
+#DEFINE_CONSTANT MAX_STATUS_QUEUE_ITEMS 200
+#DEFINE_CONSTANT MAX_COMMAND_SIZE 150
+#DEFINE_CONSTANT MAX_RESPONSE_SIZE 3000
+#DEFINE_CONSTANT MAX_MODULES 100
+#DEFINE_CONSTANT MAX_STRING_SIZE 235
+
+// #CATEGORY "" 
+// #PRINT_TO_TRACE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND 
+// #OUTPUT_SHIFT 
+// #HELP_PDF_FILE ""
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+//#ENABLE_TRACE
+#ENCODING_ASCII
+// #ENCODING_UTF16
+// #ENCODING_INHERIT_FROM_PARENT
+// #ENCODING_INHERIT_FROM_PROGRAM
+
+#HELP_BEGIN
+To be used with Biamp Tesira Command Processor v1.4.umc or Biamp Tesira Command Processor IP v1.4.umc modules only.
+Not to be used as a stand-alone module.
+#HELP_END
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional libraries as needed)
+*******************************************************************************************/
+// #CRESTRON_LIBRARY ""
+// #USER_LIBRARY ""
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+DIGITAL_INPUT Initialize, Is_RS232; // DG_REV
+DIGITAL_INPUT Connect, Disconnect, _SKIP_;
+ 
+// ANALOG_INPUT 
+BUFFER_INPUT From_Device$[10000], _SKIP_;
+BUFFER_INPUT From_Modules$[50000];
+                     
+DIGITAL_OUTPUT Is_Initialized, _SKIP_;
+DIGITAL_OUTPUT Is_Communicating, _SKIP_, _SKIP_;
+
+// ANALOG_OUTPUT 
+STRING_OUTPUT To_Device$, _SKIP_; 
+STRING_OUTPUT To_Modules$[MAX_MODULES];
+
+/*******************************************************************************************
+  SOCKETS
+  (Uncomment and define socket definitions as needed)
+*******************************************************************************************/
+
+/*******************************************************************************************
+  Parameters
+  (Uncomment and declare parameters as needed)
+*******************************************************************************************/
+// INTEGER_PARAMETER
+// SIGNED_INTEGER_PARAMETER
+// LONG_INTEGER_PARAMETER
+// SIGNED_LONG_INTEGER_PARAMETER
+// STRING_PARAMETER
+
+/*******************************************************************************************
+  Parameter Properties
+  (Uncomment and declare parameter properties as needed)
+*******************************************************************************************/
+/*
+#BEGIN_PARAMETER_PROPERTIES parameter_variable, parameter_variable, ...
+   // propValidUnits = // unitString or unitDecimal|unitHex|unitPercent|unitCharacter|unitTime|unitTicks;
+   // propDefaultUnit = // unitString, unitDecimal, unitHex, unitPercent, unitCharacter, unitTime or unitTicks;
+   // propBounds = lower_bound , upper_bound;
+   // propDefaultValue = ;  // or, propDefaultValue = "";
+   // propList = // { "value" , "label" } , { "value" , "label" } , ... ;
+   // propShortDescription = "status_bar_hint_text";
+   // #BEGIN_PROP_FULL_DESCRIPTION  line_1...  line_2...  line_n  #END_PROP_FULL_DESCRIPTION
+   // #BEGIN_PROP_NOTES line_1...  line_2...  line_n  #END_PROP_NOTES
+#END_PARAMETER_PROPERTIES
+*/
+
+/*******************************************************************************************
+  Structure Definitions
+  (Uncomment and define structure definitions as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: struct.myString = "";
+*******************************************************************************************/
+STRUCTURE _ModuleComm
+{
+	INTEGER isRegistered;
+	INTEGER isInitialized;
+};
+
+STRUCTURE _CommQueue
+{
+	INTEGER nBusy;
+	INTEGER nHasItems;
+	INTEGER nCommandHead;
+	INTEGER nCommandTail;
+	INTEGER nStatusHead;
+	INTEGER nStatusTail;
+	INTEGER nStrikeCount;
+	INTEGER nResendLast;
+	STRING sLastMessage[MAX_COMMAND_SIZE];
+};
+
+_ModuleComm moduleComm[MAX_MODULES];
+
+_CommQueue queueComm;
+STRING sCommandQueue[MAX_COMMAND_QUEUE_ITEMS][MAX_COMMAND_SIZE];
+STRING sStatusQueue[MAX_STATUS_QUEUE_ITEMS][MAX_COMMAND_SIZE];
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+INTEGER parsingDeviceBusy;
+STRING parsedDeviceMsg[MAX_RESPONSE_SIZE];
+STRING echoDeviceMsg[MAX_RESPONSE_SIZE];
+INTEGER responseMsgID;
+
+INTEGER parsingModuleBusy;
+STRING parsedModuleMsg[MAX_COMMAND_SIZE];
+STRING trash[100];
+INTEGER responseModuleMsgID;
+
+INTEGER initModuleID;
+INTEGER regModuleID;
+INTEGER isInitializing;
+INTEGER isRegistering;
+INTEGER isHeartbeating;
+INTEGER isRS232; // DG_REV
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+////////////////////////////////////////////////////////////
+// String Method Helpers
+////////////////////////////////////////////////////////////
+Integer_Function startsWith(STRING MATCH_STRING, STRING SOURCE_STRING)
+{
+	RETURN (FIND(MATCH_STRING,SOURCE_STRING) = 1); 
+}
+
+Integer_Function contains(STRING MATCH_STRING, STRING SOURCE_STRING)
+{
+	RETURN (FIND(MATCH_STRING,SOURCE_STRING) > 0); 
+}
+
+String_Function removeAll(STRING source, STRING removeItem)
+{
+	string piece[MAX_RESPONSE_SIZE];
+    string response[MAX_RESPONSE_SIZE];
+                                          
+    response = "";
+    WHILE (FIND(removeItem, source) > 0)
+    {
+    	piece = REMOVE(removeItem, source);
+               
+        IF (LEN(piece) = LEN(removeItem))
+        	piece = "";
+        ELSE
+        	piece = LEFT(piece, LEN(piece) - LEN(removeItem));
+
+        MakeString(response, "%s%s", response, piece);
+    }
+                                                 
+    IF (LEN(source) > 0)
+    	MakeString(response, "%s%s", response, source);
+
+    RETURN (response);
+}
+ 
+
+////////////////////////////////////////////////////////////
+// Module Communication Method Helpers
+////////////////////////////////////////////////////////////
+String_Function getBoundString(STRING source, STRING startString, STRING endString)
+{
+	INTEGER startIndex;
+	INTEGER endIndex;
+	STRING response[MAX_COMMAND_SIZE];
+                                     
+    response = "";
+
+	IF (LEN(source) > 0)
+	{
+		startIndex = FIND(startString, source);
+		endIndex = FIND(endString, source, startIndex + 1);
+	
+		IF (startIndex > 0 && startIndex < endIndex)
+		{
+			startIndex = startIndex + LEN(startString);
+				
+			response = MID(source, startIndex, endIndex - startIndex);
+		}
+	}
+
+	RETURN (response);
+}
+
+Integer_Function getMsgID(STRING msg)
+{
+	RETURN (ATOI(getBoundString(msg,"<","|")));
+}
+                    
+Integer_Function getSubscribedMsgID(STRING msg)
+{
+	RETURN (ATOI(getBoundString(msg,"[","*")));
+}
+
+String_Function getMsg(STRING msg)
+{
+	STRING item[MAX_COMMAND_SIZE];
+                                                 
+	item = getBoundString(msg,"|",">");
+
+	return (item);
+}
+
+////////////////////////////////////////////////////////////
+// Initialize Helpers
+////////////////////////////////////////////////////////////  
+Function initQueue()
+{
+	queueComm.nBusy = FALSE;
+	queueComm.nHasItems = FALSE;
+	queueComm.nCommandHead = 1;
+	queueComm.nCommandTail = 1;
+	queueComm.nStatusHead = 1;
+	queueComm.nStatusTail = 1;
+	queueComm.nStrikeCount = 0;
+	queueComm.nResendLast = FALSE;
+	queueComm.sLastMessage = "";
+}
+    
+Function initModules()
+{
+	INTEGER id;
+
+	IF (isInitializing = FALSE)
+	{                                               
+		FOR (id = initModuleID to GetNumArrayRows(To_Modules$))
+		{
+			IF (moduleComm[id].isRegistered && moduleComm[id].isInitialized = FALSE)
+			{
+				isInitializing = TRUE;
+
+				MakeString(To_Modules$[id], "INIT<%d>", id);
+
+				initModuleID = id;
+				
+				BREAK;
+			}
+
+			IF (id = GetNumArrayRows(To_Modules$) && isInitializing = FALSE)
+			{
+				initModuleID = id;
+				Is_Initialized = TRUE;
+			}
+		}
+	}
+}
+         
+Function reinit()
+{
+	INTEGER id;
+               
+	initModuleID = 1;
+	isInitializing = FALSE;
+	Is_Initialized = FALSE;
+
+	FOR (id = 1 to GetNumStructureArrayCols(moduleComm))
+		moduleComm[id].isInitialized = FALSE;
+}
+
+Function reset()
+{              
+	reinit();
+	initQueue();
+}
+                    
+////////////////////////////////////////////////////////////
+// Queue Method Helpers
+////////////////////////////////////////////////////////////
+Integer_Function isQueueEmpty()
+{
+	RETURN (queueComm.nHasItems = FALSE && queueComm.nBusy = FALSE);
+}
+
+String_Function deQueue()
+{
+	STRING sResponse[MAX_COMMAND_SIZE];
+                                       
+	sResponse = "";
+
+	IF (queueComm.nHasItems = TRUE && queueComm.nBusy = FALSE)
+	{         
+		queueComm.nBusy = TRUE;
+
+		// Priority Queue has items
+		IF (queueComm.nCommandHead != queueComm.nCommandTail)
+		{
+			IF (queueComm.nCommandTail = GetNumArrayRows(sCommandQueue))
+				queueComm.nCommandTail = 1;
+			ELSE
+				queueComm.nCommandTail = queueComm.nCommandTail + 1;
+
+			queueComm.sLastMessage = sCommandQueue[queueComm.nCommandTail];
+		}
+		// Secondary Queue has items
+		ELSE IF (queueComm.nStatusHead != queueComm.nStatusTail)
+		{
+			IF (queueComm.nStatusTail = GetNumArrayRows(sStatusQueue))
+				queueComm.nStatusTail = 1;
+			ELSE
+				queueComm.nStatusTail = queueComm.nStatusTail + 1;
+
+			queueComm.sLastMessage = sStatusQueue[queueComm.nStatusTail];
+		}
+	
+		IF (queueComm.nCommandHead = queueComm.nCommandTail && queueComm.nStatusHead = queueComm.nStatusTail)
+			queueComm.nHasItems = FALSE;          
+        
+		sResponse = getMsg(queueComm.sLastMessage);
+	}
+
+	RETURN (sResponse);
+}
+
+Function sendNextQueueItem()
+{
+	STRING sOutgoing[MAX_COMMAND_SIZE];
+     
+	IF (queueComm.nResendLast = TRUE)
+	{
+		queueComm.nResendLast = FALSE;
+		sOutgoing = getMsg(queueComm.sLastMessage);
+	}
+	ELSE
+	{                                     
+		sOutgoing = deQueue();
+	}
+
+	IF (LEN(sOutgoing) > 0)
+	{
+		MakeString(To_Device$, "%s\x0a", sOutgoing);
+         
+		WAIT (250, QueueFalseResponse)
+		{
+			IF (queueComm.nBusy = TRUE)
+			{
+				IF (queueComm.nStrikeCount < 3)
+				{
+					queueComm.nStrikeCount = queueComm.nStrikeCount + 1;
+
+					trace("!!!FAILED Response{%s}",queueComm.sLastMessage);
+	
+					queueComm.nResendLast = TRUE;
+	
+					sendNextQueueItem();
+				}
+				ELSE
+				{
+					Is_Communicating = FALSE;
+					reset();
+				}
+			}
+		}
+	}
+}
+
+Function enQueue(STRING sCmd, INTEGER bPriority)
+{
+	INTEGER nQueueWasEmpty;
+	
+	nQueueWasEmpty = isQueueEmpty();
+
+	IF (bPriority = TRUE)
+	{
+		IF (queueComm.nCommandHead = GetNumArrayRows(sCommandQueue))
+		{
+			IF (queueComm.nCommandTail != 1)
+			{
+				queueComm.nCommandHead = 1;
+				sCommandQueue[queueComm.nCommandHead] = sCmd;
+				queueComm.nHasItems = TRUE;
+			}
+		}
+		ELSE IF (queueComm.nCommandTail != (queueComm.nCommandHead + 1))
+		{
+			queueComm.nCommandHead = queueComm.nCommandHead + 1;
+			sCommandQueue[queueComm.nCommandHead] = sCmd;
+			queueComm.nHasItems = TRUE;
+		}
+	}
+	ELSE
+	{
+		IF (queueComm.nStatusHead = GetNumArrayRows(sStatusQueue))
+		{
+			IF (queueComm.nStatusTail != 1)
+			{
+				queueComm.nStatusHead = 1;
+				sStatusQueue[queueComm.nStatusHead] = sCmd;
+				queueComm.nHasItems = TRUE;
+			}
+		}
+		ELSE IF (queueComm.nStatusTail != (queueComm.nStatusHead + 1))
+		{
+			queueComm.nStatusHead = queueComm.nStatusHead + 1;
+			sStatusQueue[queueComm.nStatusHead] = sCmd;
+			queueComm.nHasItems = TRUE;
+		}
+	}
+
+	IF (nQueueWasEmpty)
+		sendNextQueueItem();
+}
+
+
+Function goodResponse()
+{
+	trace("GOOD Response{%s}",queueComm.sLastMessage);
+
+	queueComm.nBusy = FALSE;
+
+	CANCELWAIT(QueueFalseResponse);
+
+	queueComm.nStrikeCount = 0;
+
+	queueComm.nResendLast = FALSE;
+
+	sendNextQueueItem();
+}
+     
+////////////////////////////////////////////////////////////
+// Heartbeat Helpers
+//////////////////////////////////////////////////////////// 
+Function sendHeartbeat()
+{
+	STRING outgoingMsg[MAX_COMMAND_SIZE];
+
+	IF (isHeartbeating = TRUE)
+	{
+		IF (isQueueEmpty())
+		{
+			MakeString(outgoingMsg,"POLL_MSG<HEARTBEAT|%s>", "DEVICE get version");
+                                                         
+			enQueue(outgoingMsg, false);
+		}
+
+		WAIT (3000, HEARTBEAT)
+		{
+			IF (isHeartbeating = TRUE)
+				sendHeartbeat();
+		}
+	}
+}
+
+Function startHeartbeat()
+{
+	STRING outgoingMsg[MAX_COMMAND_SIZE];
+
+	IF (isHeartbeating = FALSE)
+	{
+		isHeartbeating = TRUE;
+
+		sendHeartbeat();
+	}
+}
+
+Function stopHeartbeat()
+{
+	isHeartbeating = FALSE;
+
+	CANCELWAIT(HEARTBEAT);
+}
+                                              
+Function setIsCommunicating()
+{
+	STRING outgoingMsg[MAX_COMMAND_SIZE];
+
+	IF (Is_Communicating = FALSE)
+	{	
+		// DG_REV_BEGIN
+		IF (isRS232 = TRUE)
+		{
+			// "Unsubscribe ALL"
+			MakeString(To_Device$,"%s", "exit\n");
+		}
+		ELSE
+		{
+			MakeString(outgoingMsg,"POLL_MSG<VERBOSE|%s>", "SESSION set verbose false");
+	                                                        
+			enQueue(outgoingMsg, false);
+		}
+		// DG_REV_END
+	}
+}
+
+////////////////////////////////////////////////////////////
+// Registration Helpers
+//////////////////////////////////////////////////////////// 
+Function registrationProcess()
+{
+	IF (regModuleID < GetNumArrayRows(To_Modules$))
+	{
+		regModuleID = regModuleID + 1;
+
+		MakeString(To_Modules$[regModuleID], "REGISTER<%d>", regModuleID);
+
+		WAIT (10, RegistrationWait)
+		{
+			IF (isRegistering)
+				registrationProcess();
+		}
+	}
+	ELSE
+		isRegistering = FALSE;
+}
+
+Function startRegistration()
+{
+	IF (isRegistering = FALSE)
+	{
+		isRegistering = TRUE;
+		regModuleID = 0;
+		registrationProcess();
+	}
+}
+
+Function stopRegistration()
+{
+	CancelWait(RegistrationWait);
+	isRegistering = FALSE;
+}
+
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+
+// "POLL_MSG<ID|MSG>"
+// "COMMAND_MSG<ID|MSG>"
+// "RESPONSE_OK<ID|MSG>"
+// "REGISTER<ID>"
+// "INIT_DONE<ID>"
+
+
+
+
+// Function for processing message received from Module via CHANGE From_Modules$
+FUNCTION ProcessModuleMsg()
+{
+    IF (LEN(parsedModuleMsg) > 0)
+    {
+        IF (contains("POLL_MSG", parsedModuleMsg))
+        {
+            enQueue(parsedModuleMsg, FALSE);
+        }
+        ELSE IF (contains("COMMAND_MSG", parsedModuleMsg))
+        {
+            enQueue(parsedModuleMsg, TRUE);
+        }
+        ELSE IF (contains("RESPONSE_OK", parsedModuleMsg))
+        {
+            IF (compareStrings(getBoundString(parsedModuleMsg,"<",">"), getBoundString(queueComm.sLastMessage,"<",">")) = 0)
+                goodResponse();
+        }	
+        ELSE IF (contains("INIT_DONE", parsedModuleMsg))
+        {
+            isInitializing = FALSE;
+
+            responseModuleMsgID = ATOI(getBoundString(parsedModuleMsg,"<",">"));
+
+            IF (responseModuleMsgID > 0 && responseModuleMsgID <= GetNumStructureArrayCols(moduleComm))
+            {
+                moduleComm[responseModuleMsgID].isInitialized = TRUE;
+            }
+
+            initModules();
+        }
+        ELSE IF (contains("REGISTER", parsedModuleMsg))
+        {
+            responseModuleMsgID = ATOI(getBoundString(parsedModuleMsg,"<",">"));
+            
+            IF (responseModuleMsgID > 0 && responseModuleMsgID <= GetNumStructureArrayCols(moduleComm))
+            {
+                moduleComm[responseModuleMsgID].isRegistered = TRUE;
+            }
+        }
+    }    
+}
+
+#if_series3
+THREADSAFE CHANGE From_Modules$
+{
+    WHILE (TRUE)
+    {
+        try
+        {
+			parsedModuleMsg = Gather(">", From_Modules$);
+            ProcessModuleMsg();        
+        }
+        catch
+        {
+            print("Issue with Module message handeling\n");
+        }
+    }
+}
+#else
+CHANGE From_Modules$
+{
+	IF (parsingModuleBusy = FALSE)
+	{
+		parsingModuleBusy = TRUE;
+    
+		WHILE(TRUE)
+		{    
+			parsedModuleMsg = Gather(">", From_Modules$);
+            ProcessModuleMsg();
+  		}
+             
+		parsingModuleBusy = FALSE;
+	}
+}
+#endif
+
+ 
+
+// Function for processing message received from Processor via CHANGE From_Device$
+FUNCTION ProcessDeviceMsg()
+{
+   IF (LEN(parsedDeviceMsg) > 0)
+   {
+        parsedDeviceMsg = LEFT(parsedDeviceMsg, LEN(parsedDeviceMsg) - 2);
+
+        parsedDeviceMsg = removeAll(parsedDeviceMsg, "\x00");
+
+        IF (contains("+OK",parsedDeviceMsg) && contains(echoDeviceMsg, getMsg(queueComm.sLastMessage)))
+        {
+            // HEARTBEAT;
+            IF (contains("HEARTBEAT",queueComm.sLastMessage))
+            {
+                trace("HeartBeat Recieved!");
+
+                setIsCommunicating();
+
+                IF (Initialize && Is_Initialized = FALSE)
+                    initModules();
+	        
+				goodResponse();
+            }
+            ELSE IF (contains("VERBOSE",queueComm.sLastMessage))
+            {
+                Is_Communicating = TRUE;
+                
+                goodResponse();
+            }
+            ELSE
+            {
+                responseMsgID = getMsgID(queueComm.sLastMessage);
+                    
+                IF (responseMsgID > 0 && responseMsgID <= GetNumArrayRows(To_Modules$))
+                {
+                    MakeString(To_Modules$[responseMsgID], "RESPONSE_MSG<%s|%s>", getMsg(queueComm.sLastMessage), parsedDeviceMsg);							
+                }
+            }
+        }
+        ELSE IF (contains("-ERR",parsedDeviceMsg)  && contains(echoDeviceMsg, getMsg(queueComm.sLastMessage)))
+        {
+            responseMsgID = getMsgID(queueComm.sLastMessage);
+
+            IF (responseMsgID > 0 && responseMsgID <= GetNumArrayRows(To_Modules$))
+            {
+                MakeString(To_Modules$[responseMsgID], "RESPONSE_MSG<%s|%s>", getMsg(queueComm.sLastMessage), parsedDeviceMsg);
+            }
+        }
+        // Subscribed Messages
+        ELSE IF (contains("! ",parsedDeviceMsg))
+        {
+            responseMsgID = getSubscribedMSGID(parsedDeviceMsg);
+
+            IF (responseMsgID > 0 && responseMsgID <= GetNumArrayRows(To_Modules$))
+            {
+                IF (LEN(parsedDeviceMsg) > MAX_STRING_SIZE)
+                {
+                    MakeString(To_Modules$[responseMsgID], "SUBSCRIBED_MSG<");
+
+                    WHILE(LEN(parsedDeviceMsg) > 0)
+                    {
+                        IF (LEN(parsedDeviceMsg) > MAX_STRING_SIZE)
+                            MakeString(To_Modules$[responseMsgID], "%s", RemoveByLength(MAX_STRING_SIZE, parsedDeviceMsg));
+                        ELSE
+                            MakeString(To_Modules$[responseMsgID], "%s", RemoveByLength(LEN(parsedDeviceMsg), parsedDeviceMsg));
+                    }
+
+                    MakeString(To_Modules$[responseMsgID], ">");
+                }
+                ELSE
+                {
+                    MakeString(To_Modules$[responseMsgID], "SUBSCRIBED_MSG<%s>", parsedDeviceMsg);
+                }				
+            }
+        }
+		// DG_REV_BEGIN
+		// RS232 Message
+		ELSE IF (contains("Welcome",parsedDeviceMsg))
+        {
+			IF (Is_RS232)
+	        	enQueue("POLL_MSG<VERBOSE|SESSION set verbose false>", false);
+        }
+		// DG_REV_END
+        ELSE IF (LEN(parsedDeviceMsg) > 0)
+		{
+			echoDeviceMsg = parsedDeviceMsg;
+		}
+    }
+}
+
+
+#if_series3
+THREADSAFE CHANGE From_Device$
+{
+    WHILE(TRUE)
+    {
+        try
+        {
+            parsedDeviceMsg = GATHER("\x0a", From_Device$);
+            ProcessDeviceMsg();
+        }
+        catch
+        {
+            print("Issue with Device Rx message handeling\n");
+        }
+    }
+}
+#else
+CHANGE From_Device$
+{		
+	IF (parsingDeviceBusy = FALSE)
+	{
+		parsingDeviceBusy = TRUE;
+
+		WHILE(TRUE) 
+		{
+			parsedDeviceMsg = GATHER("\x0a", From_Device$);
+            ProcessDeviceMsg();
+		}
+        
+		parsingDeviceBusy = FALSE;
+	}	
+}
+#endif
+
+
+
+PUSH Connect
+{
+
+	reset();
+	CANCELWAIT(QueueFalseResponse);
+	
+	WAIT(500, StartHeartBeatProcess)
+		startHeartbeat();
+}
+
+PUSH Initialize
+{
+	IF (Is_Communicating)
+	{	
+		reset();
+		CANCELWAIT(QueueFalseResponse);
+
+		initModules();
+	}
+}
+
+PUSH Disconnect
+{
+	CANCELWAIT(StartHeartBeatProcess);
+
+	reset();
+	CANCELWAIT(QueueFalseResponse);
+
+	Is_Communicating = FALSE;
+	stopHeartbeat();
+}
+       
+// DG_REV_BEGIN       
+PUSH Is_RS232
+{
+	isRS232 = TRUE;
+}
+// DG_REV_END
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+
+Function Main()
+{
+	parsingDeviceBusy = FALSE;
+	parsingModuleBusy = FALSE;
+                               
+	Is_Communicating = FALSE;
+
+	isInitializing = FALSE;
+	isRegistering = FALSE;
+	isHeartbeating = FALSE;
+	isRS232 = FALSE;
+
+	reset();
+                
+	WaitForInitializationComplete();
+
+	startRegistration();
+} 
+

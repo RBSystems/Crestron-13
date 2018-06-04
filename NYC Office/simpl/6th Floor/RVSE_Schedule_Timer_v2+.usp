@@ -1,0 +1,166 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer:
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+// #SYMBOL_NAME ""
+// #HINT ""
+#DEFINE_CONSTANT TRUE 	1
+#DEFINE_CONSTANT FALSE	0
+// #CATEGORY "" 
+#DEFAULT_VOLATILE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND 
+// #OUTPUT_SHIFT 
+//#DEFAULT_NONVOLATILE
+#ENABLE_STACK_CHECKING
+/*
+#HELP_BEGIN
+   (add additional lines of help lines)
+#HELP_END
+*/
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional libraries as needed)
+*******************************************************************************************/
+// #CRESTRON_LIBRARY ""
+// #USER_LIBRARY ""
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+DIGITAL_INPUT Clock,
+						  Enable_Check_Status,
+							Enable_Auto_Request,
+							Enable_Slow_Auto_Request,
+							RoomView_Online;
+
+ANALOG_INPUT Clock_Interval,
+						 Check_Status_Frequency,
+						 Auto_Request_Frequency,
+						 Slow_Auto_Request_Frequency;
+						  
+// STRING_INPUT 
+// BUFFER_INPUT 
+
+DIGITAL_OUTPUT Trigger_Check_Status,
+							 Trigger_Get_Schedule; 
+// ANALOG_OUTPUT 
+// STRING_OUTPUT 
+
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+INTEGER g_iCheckStatusCount,
+				g_iAutoRequestCount,
+				g_iSlowAutoRequestCount;
+// LONG_INTEGER
+// SIGNED_INTEGER
+// SIGNED_LONG_INTEGER
+// STRING
+
+
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+
+PUSH Enable_Check_Status
+{
+	g_iCheckStatusCount = 0;
+}
+
+PUSH Enable_Auto_Request
+{
+	g_iAutoRequestCount = 0;
+}
+
+PUSH Enable_Slow_Auto_Request
+{
+	g_iSlowAutoRequestCount = 0;
+}
+
+PUSH Clock
+{
+	if (Enable_Check_Status)
+	{
+		g_iCheckStatusCount = g_iCheckStatusCount + 1;
+		
+		if ((g_iCheckStatusCount * Clock_Interval) >= Check_Status_Frequency)
+		{
+			Trigger_Check_Status = TRUE;
+			Trigger_Check_Status = FALSE;
+			
+			g_iCheckStatusCount = 0; 
+		}		
+	}
+	
+	if (Enable_Auto_Request && RoomView_Online)
+	{
+		g_iAutoRequestCount = g_iAutoRequestCount + 1;
+		
+		if ((g_iAutoRequestCount * Clock_Interval) >= Auto_Request_Frequency)
+		{
+			Trigger_Get_Schedule = TRUE;
+			Trigger_Get_Schedule = FALSE;
+			
+			g_iAutoRequestCount = 0;
+			
+			//process schedule response will call check status internally
+			g_iCheckStatusCount = 0; 
+		}		
+	}
+	
+	if (Enable_Slow_Auto_Request && RoomView_Online)
+	{
+		g_iSlowAutoRequestCount = g_iSlowAutoRequestCount + 1;
+		
+		if ((g_iSlowAutoRequestCount * Clock_Interval) >= Slow_Auto_Request_Frequency)
+		{
+			Trigger_Get_Schedule = TRUE;
+			Trigger_Get_Schedule = FALSE;
+			
+			g_iSlowAutoRequestCount = 0;
+			
+			//process schedule response will call check status internally
+			g_iCheckStatusCount = 0; 
+		}		
+	}
+
+}
+
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+
+Function Main()
+{
+  WaitForInitializationComplete();
+	
+	g_iCheckStatusCount = 0;
+	g_iAutoRequestCount = 0;
+	g_iSlowAutoRequestCount = 0;
+
+}
+
+

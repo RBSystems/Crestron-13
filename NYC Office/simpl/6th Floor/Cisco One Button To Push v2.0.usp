@@ -1,0 +1,647 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:	Crestron Electronics, Inc.
+System Name:
+System Number:
+Programmer:		PAC
+Comments:
+*/
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+// #ENABLE_DYNAMIC
+#SYMBOL_NAME "Cisco One Button To Push v2.0"
+// #HINT ""
+#DEFINE_CONSTANT	MAXMEETINGS			50
+#DEFINE_CONSTANT	MAXENDPOINTS		10
+// #CATEGORY "" 
+// #PRINT_TO_TRACE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND 
+// #OUTPUT_SHIFT 
+// #HELP_PDF_FILE ""
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+// #ENABLE_TRACE
+// #ENCODING_ASCII
+// #ENCODING_UTF16
+// #ENCODING_INHERIT_FROM_PARENT
+// #ENCODING_INHERIT_FROM_PROGRAM
+#HELP_BEGIN
+	For use inside the Cisco One Button To Push v2.0 module only.
+#HELP_END
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional libraries as needed)
+*******************************************************************************************/
+#USER_SIMPLSHARP_LIBRARY	"Cisco One Button To Push"
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+DIGITAL_INPUT	getMeetings, joinMeeting, clearMeetings, extendMeetingNo, extendMeetingYes,
+				extendMeetingHide, clearSelectedMeeting, use12HourTime,
+				refreshMeetingsListDisplay;
+ANALOG_INPUT	selectMeeting;
+BUFFER_INPUT	fromDevice[50000];
+
+DIGITAL_OUTPUT	downloadBusy, meetingAvailable, extendMeeting, noMeetingsScheduled,
+				selectedMeetingJoinable, meetingIsSelected, selectedMeetingIsInProgress,
+				availabeMeetingIsInProgress;
+ANALOG_OUTPUT	currentMeetingProgress, meetingListCount, availableMeetingEndPointCount,
+				selectedMeetingEndPointCount, detailsScrollingListCount,
+				availableMeetingDetailsScrollingListCount;
+STRING_OUTPUT	toDevice, availableMeetingName, availableMeetingDescription,
+				availableMeetingStartTime, availableMeetingEndTime,
+				availableMeetingTime,
+				availableMeetingOrganizer, availableMeetingWebExURL,
+				availableMeetingWebExNumber, availableMeetingWebExPassword,
+				availableMeetingWebExHostKey, selectedMeetingName,
+				selectedMeetingDescription, selectedMeetingTime,
+				selectedMeetingOrganizer, selectedMeetingWebExURL,
+				selectedMeetingWebExNumber, selectedMeetingWebExPassword,
+				selectedMeetingWebExHostKey, selectedMeetingStartTime,
+				selectedMeetingEndTime, extendMeetingText;
+STRING_OUTPUT	meetingName[MAXMEETINGS], meetingDescription[MAXMEETINGS],
+				meetingTime[MAXMEETINGS], meetingDate[MAXMEETINGS],
+				availableMeetingEndPointNumber[MAXENDPOINTS],
+				selectedMeetingEndPointNumber[MAXENDPOINTS], detailsScrollingList[17],
+				detailsScrollingListTitle[17], availableMeetingDetailsScrollingList[17],
+				availableMeetingDetailsScrollingListTitle[17];
+/*******************************************************************************************
+	Simpl# Class Declarations
+*******************************************************************************************/
+CiscoOneButtonToPush ciscoOBTP;
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+INTEGER	_downloadBusy, _meetingNumber, _meetingTime, _numberOfMeetings, _endPointCount,
+		_selectedMeeting, _meetingSpan, _bookingsUpdateReceived, _meetingSoonNumber,
+		_availableMeetingEndPointCount, _detailsScrollingListCount,
+		_availableMeetingDetailsScrollingListCount;
+STRING	_joinableMeetingId[50], _activeMeetingId[50], _waitMeetingId[100],
+		_detailsScrollingList[17][150], _detailsScrollingListTitles[17][75],
+		_availableMeetingDetailsScrollingList[17][150], _selectedMeetingId[50],
+		_availableMeetingDetailsScrollingListTitles[17][75];
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+Function waitMeetingTimeCounter()
+{
+	wait(6000, waitMeetingTime)
+	{
+		_meetingTime = _meetingTime + 1;
+		if(_meetingTime > _meetingSpan)
+		{
+			_meetingTime = 0;
+			currentMeetingProgress = _meetingTime * 65535 / _meetingSpan;
+		}
+		else
+		{
+			currentMeetingProgress = _meetingTime * 65535 / _meetingSpan;
+			waitMeetingTimeCounter();
+		}
+	}
+}
+
+Function meetingTimeCounter(string _tempMeetingId)
+{
+	integer _tempMeetingNumber;
+	_tempMeetingNumber = ciscoOBTP.GetMeetingNumber(_tempMeetingId);
+	_meetingSpan = ciscoOBTP.getMeetingTimeSpan(_tempMeetingNumber);
+	currentMeetingProgress = _meetingTime * 65535 / _meetingSpan;
+	cancelwait(waitMeetingTime);
+	waitMeetingTimeCounter();
+}
+
+function meetingSoonTimeText(string _tempMeetingID)
+{
+	string _tempData[100];
+	_waitMeetingId = _tempMeetingId;
+	_meetingSoonNumber = ciscoOBTP.GetMeetingNumber(_tempMeetingId);
+	_tempData = ciscoOBTP.GetMeetingStartTime(_meetingSoonNumber);
+	wait(6000, waitMeetingSoon)
+	{
+		meetingSoonTimeText(_waitMeetingId);
+	}
+}
+
+Function displayMeetings()
+{
+	string _tempData[250];
+	integer a;//trace("display meetings: _numberOfMeetings = %d", _numberOfMeetings);
+	_numberOfMeetings = ciscoOBTP.GetMeetingCount();
+	if(_numberOfMeetings = 0)
+	{
+		noMeetingsScheduled = 1;
+		meetingListCount = 1;
+		meetingName[1] = "No Meetings Scheduled";
+	}
+	else
+	{
+		noMeetingsScheduled = 0;
+		meetingListCount = _numberOfMeetings;
+		for(a = 1 to _numberOfMeetings)
+		{
+			_tempData = ciscoOBTP.GetMeetingName(a - 1);
+			meetingName[a] = _tempData;
+			_tempData = ciscoOBTP.GetMeetingTimeRange(a - 1);
+			meetingTime[a] = _tempData;
+			_tempData = ciscoOBTP.GetMeetingDescription(a - 1);
+			meetingDescription[a] = _tempData;
+			_tempData = ciscoOBTP.GetMeetingDate(a - 1);
+			meetingDate[a] = _tempData;
+		}
+	}
+}
+
+function displaySelectedMeeting(integer tempSelectedMeeting)
+{
+	integer _tempSelectedAdjusted, a, b, _temp, _tempCount;
+	string _tempData[250];
+	_detailsScrollingListCount = 0;
+	_tempSelectedAdjusted = tempSelectedMeeting - 1;
+	_selectedMeetingId = ciscoOBTP.GetMeetingId(_tempSelectedAdjusted);
+	if((_selectedMeetingId = _activeMeetingId) && (_selectedMeetingId <> ""))
+	{
+		selectedMeetingIsInProgress = 1;
+	}
+	else
+	{
+		selectedMeetingIsInProgress = 0;
+	}
+	_endPointCount = ciscoOBTP.GetEndPointCount(_tempSelectedAdjusted);
+	_tempData = ciscoOBTP.GetMeetingName(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "";
+	}
+	selectedMeetingName = _tempData;
+	_tempData = ciscoOBTP.GetMeetingDescription(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "Description";
+	}
+	selectedMeetingDescription = _tempData;
+	_tempData = ciscoOBTP.GetMeetingTimeDisplay(_tempSelectedAdjusted);
+	selectedMeetingTime = _tempData;
+	_tempData = ciscoOBTP.GetMeetingStartTime(_tempSelectedAdjusted);
+	selectedMeetingStartTime = _tempData;
+	_tempData = ciscoOBTP.GetMeetingEndTime(_tempSelectedAdjusted);
+	selectedMeetingEndTime = _tempData;
+	_tempData = ciscoOBTP.GetMeetingOrganizer(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "Organizer";
+	}
+	selectedMeetingOrganizer = _tempData;
+	_tempData = ciscoOBTP.GetWebExURL(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "WebEx URL";
+	}
+	selectedMeetingWebExURL = _tempData;
+	_tempData = ciscoOBTP.GetWebExNumber(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "WebEx Number";
+	}
+	selectedMeetingWebExNumber = _tempData;
+	_tempData = ciscoOBTP.GetWebExPassword(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "WebEx Password";
+	}
+	selectedMeetingWebExPassword = _tempData;
+	_tempData = ciscoOBTP.GetWebExHostKey(_tempSelectedAdjusted);
+	if(_tempData <> "")
+	{
+		_detailsScrollingListCount = _detailsScrollingListCount + 1;
+		_detailsScrollingList[_detailsScrollingListCount] = _tempData;
+		_detailsScrollingListTitles[_detailsScrollingListCount] = "WebEx Host Key";
+	}
+	_tempCount = _detailsScrollingListCount; 
+	_detailsScrollingListCount = _detailsScrollingListCount + _endPointCount;
+	selectedMeetingWebExHostKey = _tempData;
+	selectedMeetingEndPointCount = _endPointCount;
+	_temp = ciscoOBTP.GetMeetingJoinableState(_tempSelectedAdjusted);
+	selectedMeetingJoinable = _temp;
+	detailsScrollingListCount = _detailsScrollingListCount;
+	for(a = 1 to _endPointCount)
+	{
+		b = a - 1;
+		_tempData = ciscoOBTP.GetEndPointNumber(_tempSelectedAdjusted, b);
+		_detailsScrollingList[_tempCount + a] = _tempData;
+		_detailsScrollingListTitles[_tempCount + a] = "Meeting Number";
+		selectedMeetingEndPointNumber[a] = _tempData;
+	}
+	for(a = 1 to _detailsScrollingListCount)
+	{
+		detailsScrollingList[a] = _detailsScrollingList[a];
+		detailsScrollingListTitle[a] = _detailsScrollingListTitles[a];
+	}
+	meetingIsSelected = 1;
+}
+
+function _clearSelectedMeeting()
+{
+	integer a;
+	selectedMeetingName = "";
+	selectedMeetingDescription = "";
+	selectedMeetingTime = "";
+	selectedMeetingStartTime = "";
+	selectedMeetingEndTime = "";
+	selectedMeetingOrganizer = "";
+	selectedMeetingWebExURL = "";
+	selectedMeetingWebExNumber = "";
+	selectedMeetingWebExPassword = "";
+	selectedMeetingWebExHostKey = "";
+	for(a = 1 to _endPointCount)
+	{
+		selectedMeetingEndPointNumber[a] = "";
+	}
+	meetingIsSelected = 0;
+	_endPointCount = 1;
+	selectedMeetingEndPointCount = 1;
+	selectedMeetingIsInProgress = 0;
+}
+
+function fGetMeetingsDelay()
+{
+	wait(1000, wGetMeetings)
+	{
+		if(_downloadBusy = 0)
+		{
+			ciscoOBTP.GetMeetings();
+		}
+	}
+}
+
+function fDisplayAvailableMeeting(string id)
+{
+	string _tempData[250];
+	integer _temp, _tempPointCount, a, b, _tempCount;
+	_temp = ciscoOBTP.GetMeetingNumber(_joinableMeetingId);
+	_tempData = ciscoOBTP.GetMeetingName(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "";
+	}
+	availableMeetingName = _tempData;
+	_tempData = ciscoOBTP.GetMeetingDescription(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "Description";
+	}
+	availableMeetingDescription = _tempData;
+	_tempData = ciscoOBTP.GetMeetingStartTime(_temp);
+	availableMeetingStartTime = _tempData;
+	_tempData = ciscoOBTP.GetMeetingEndTime(_temp);
+	availableMeetingEndTime = _tempData;
+	_tempData = ciscoOBTP.GetMeetingTimeDisplay(_temp);
+	availableMeetingTime = _tempData;
+	_tempData = ciscoOBTP.GetMeetingOrganizer(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "Organizer";
+	}
+	availableMeetingOrganizer = _tempData;
+	_tempData = ciscoOBTP.GetWebExURL(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "WebEx URL";
+	}
+	availableMeetingWebExURL = _tempData;
+	_tempData = ciscoOBTP.GetWebExNumber(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "WebEx Number";
+	}
+	availableMeetingWebExNumber = _tempData;
+	_tempData = ciscoOBTP.GetWebExPassword(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "WebEx Password";
+	}
+	availableMeetingWebExPassword = _tempData;
+	_tempData = ciscoOBTP.GetWebExHostKey(_temp);
+	if(_tempData <> "")
+	{
+		_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + 1;
+		_availableMeetingDetailsScrollingList[_availableMeetingDetailsScrollingListCount] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_availableMeetingDetailsScrollingListCount] = "WebEx HostKey";
+	}
+	availableMeetingWebExHostKey = _tempData;
+	_tempPointCount = ciscoOBTP.GetEndPointCount(_temp);
+	_availableMeetingEndPointCount = _tempPointCount;
+	availableMeetingEndPointCount = _availableMeetingEndPointCount;
+	_tempCount = _availableMeetingDetailsScrollingListCount;
+	_availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount + _tempPointCount;
+	availableMeetingDetailsScrollingListCount = _availableMeetingDetailsScrollingListCount;
+	for(a = 1 to _tempPointCount)
+	{
+		b = a - 1;
+		_tempData = ciscoOBTP.GetEndPointNumber(_temp, b);
+		_availableMeetingDetailsScrollingList[_tempCount + a] = _tempData;
+		_availableMeetingDetailsScrollingListTitles[_tempCount + a] = "Meeting Number";
+		availableMeetingEndPointNumber[a] = _tempData;
+	}
+	for(a = 1 to _availableMeetingDetailsScrollingListCount)
+	{
+		availableMeetingDetailsScrollingList[a] = _availableMeetingDetailsScrollingList[a];
+		availableMeetingDetailsScrollingListTitle[a] = _availableMeetingDetailsScrollingListTitles[a];
+	}
+}
+
+function fClearAvailableMeeting()
+{
+	integer a;
+	availableMeetingName = "";
+	availableMeetingDescription = "";
+	availableMeetingStartTime = "";
+	availableMeetingEndTime = "";
+	availableMeetingOrganizer = "";
+	availableMeetingWebExURL = "";
+	availableMeetingWebExNumber = "";
+	availableMeetingWebExPassword = "";
+	availableMeetingWebExHostKey = "";	
+	for(a = 1 to _availableMeetingEndPointCount)
+	{
+		availableMeetingEndPointNumber[a] = "";
+	}
+	_availableMeetingDetailsScrollingListCount = 1;
+	_availableMeetingEndPointCount = 1;
+	availableMeetingEndPointCount = _availableMeetingEndPointCount;
+}
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+PUSH getMeetings
+{
+	cancelwait(wGetMeetings);
+	ciscoOBTP.GetMeetings();
+}
+
+PUSH joinMeeting
+{
+	ciscoOBTP.JoinMeeting(_joinableMeetingId);
+	_activeMeetingId = _joinableMeetingId;
+	meetingAvailable = 0;
+}
+
+PUSH clearMeetings
+{
+	ciscoOBTP.ClearMeetings();
+}
+
+PUSH extendMeetingYes
+{
+	ciscoOBTP.ExtendMeeting(_activeMeetingId, 1);
+	extendMeeting = 0;
+	extendMeetingText = "";
+	meetingTimeCounter(_activeMeetingId);
+}
+
+PUSH extendMeetingNo
+{
+	ciscoOBTP.ExtendMeeting(_activeMeetingId, 0);
+	extendMeeting = 0;
+	extendMeetingText = "";
+}
+
+PUSH extendMeetingHide
+{
+	extendMeeting = 0;
+	extendMeetingText = "";
+}
+
+Push use12HourTime
+{
+	ciscoOBTP.Set24HourMode(1);
+}
+
+Release use12HourTIme
+{
+	ciscoOBTP.Set24HourMode(0);
+}
+
+Push refreshMeetingsListDisplay
+{
+	displayMeetings();
+}
+
+Change selectMeeting
+{
+	if(_selectedMeeting <> selectMeeting)
+	{
+		_selectedMeeting = selectMeeting;
+		displaySelectedMeeting(_selectedMeeting);
+	}
+	else
+	{
+		_selectedMeeting = 0;
+		_clearSelectedMeeting();
+	}
+}
+
+Push clearSelectedMeeting
+{
+	if(_selectedMeeting <> 0)
+	{
+		_clearSelectedMeeting();
+	}
+}
+
+threadsafe Change fromDevice
+{
+	string _tempResponse[500];
+	try
+	{
+		while(1)
+		{
+			_tempResponse = gather("\x0D\x0A", fromDevice);
+			if((_downloadBusy = 0) && (_tempResponse = "*e Bookings Updated\n"))
+			{
+				ciscoOBTP.DataHandler(_tempResponse);
+			}
+			else if(_downloadBusy = 1)
+			{
+				ciscoOBTP.DataHandler(_tempResponse);
+			}
+			_tempResponse = "";
+		}
+	}
+	catch
+	{
+		generateusernotice("Cisco OBTP fromDevice error: %s", getexceptionmessage());
+	}
+}
+/*******************************************************************************************
+	Callback Functions
+	Place Simpl# callback functions
+*******************************************************************************************/
+callback Function CommandFromSimplSharp(string fromSimplSharp)
+{
+	toDevice = fromSimplSharp;
+}
+
+callback function DownloadBusyFromSimplSharp(integer fromSimplSharp)
+{
+	integer _temp;//trace("downloadbusy from Simpl#: fromSimplSharp = %d", fromSimpLSharp);
+	if(fromSimplSharp = 1)
+	{
+		_downloadBusy = 1;
+	}
+	else
+	{//trace("download complete");
+		_downloadBusy = 0;
+		displayMeetings();
+		if(len(_joinableMeetingId) > 0)
+		{
+			fDisplayAvailableMeeting(_joinableMeetingId);
+			meetingAvailable = 1;
+		}
+		if(len(_activeMeetingId) > 0)
+		{
+			_temp = ciscoOBTP.GetMeetingNumber(_activeMeetingId);
+			_meetingTime = ciscoOBTP.GetMeetingProgress(_temp);
+			availabeMeetingIsInProgress = 1;
+			meetingTimeCounter(_activeMeetingId);
+		}
+	}
+	downloadBusy = _downloadBusy;
+}
+
+callback function MeetingSoonFromSimplSharp(string fromSimplSharp)
+{
+	_joinableMeetingId = fromSimplSharp;
+	if(_downloadBusy = 0)
+	{
+		if(fromSimplSharp <> "")
+		{
+			meetingAvailable = 1;
+		}
+		else
+		{
+			meetingAvailable = 0;
+		}
+	}
+}
+
+callback function MeetingJoinableFromSimplSharp(string fromSimplSharp)
+{
+	_joinableMeetingId = fromSimplSharp;
+	if(_downloadBusy = 0)
+	{
+		fDisplayAvailableMeeting(_joinableMeetingId);
+		meetingAvailable = 1;
+	}
+}
+
+callback function MeetingStartedFromSimplSharp(string fromSimplSharp)
+{
+	_meetingTime = 0;
+	_activeMeetingId = fromSimplSharp;
+	if(_downloadBusy = 0)
+	{
+		availabeMeetingIsInProgress = 1;
+		if((_selectedMeetingId = _activeMeetingId) && (_selectedMeetingId <> ""))
+		{
+			selectedMeetingIsInProgress = 1;
+		}
+		else
+		{
+			selectedMeetingIsInProgress = 0;
+		}
+		meetingTimeCounter(_activeMeetingId);
+	}
+}
+
+callback function MeetingExtendFromSimplSharp(string fromSimplSharp)
+{
+	string _tempData[250];
+	integer _tempMeetingNumber;
+	extendMeeting = 1;
+	_tempMeetingNumber = ciscoOBTP.GetMeetingNumber(fromSimplSharp);
+	_tempData = ciscoOBTP.GetExtendText(_tempMeetingNumber);
+	extendMeetingText = _tempData;
+}
+
+callback function MeetingEndedFromSimplSharp(string fromSimplSharp)
+{
+	cancelwait(waitMeetingTime);
+	_joinableMeetingId = "";
+	_activeMeetingId = "";
+	meetingAvailable = 0;
+	extendMeeting = 0;
+	extendMeetingText = "";
+	fClearAvailableMeeting();
+	cancelwait(wGetMeetings);
+	fGetMeetingsDelay();
+}
+
+callback function MeetingStartTimeTextFromSimplSharp(string fromSimplSharp)
+{
+	integer _temp;
+	string _tempText[100];
+	_temp = ciscoOBTP.GetMeetingNumber(fromSimplSharp);
+	_tempText = ciscoOBTP.GetMeetingTimeDisplay(_temp);
+	meetingTime[_temp + 1] = _tempText;
+}
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+Function Main()
+{
+	WaitForInitializationComplete();
+	registerdelegate(ciscoOBTP, _sendCommand, CommandFromSimplSharp);
+	registerdelegate(ciscoOBTP, downloadBusy, DownloadBusyFromSimplSharp);
+	registerdelegate(ciscoOBTP, meetingSoon, MeetingSoonFromSimplSharp);
+	registerdelegate(ciscoOBTP, meetingJoinable, MeetingJoinableFromSimplSharp);
+	registerdelegate(ciscoOBTP, meetingStarted, MeetingStartedFromSimplSharp);
+	registerdelegate(ciscoOBTP, meetingExtend, MeetingExtendFromSimplSharp);
+	registerdelegate(ciscoOBTP, meetingEnded, MeetingEndedFromSimplSharp);
+	registerdelegate(ciscoOBTP, meetingTimeText, MeetingStartTimeTextFromSimplSharp);
+	ciscoOBTP.Initialize();
+	ciscoOBTP.Set24HourMode(0);
+	_bookingsUpdateReceived = 0;
+	meetingIsSelected = 0;
+	selectedMeetingIsInProgress = 0;
+}

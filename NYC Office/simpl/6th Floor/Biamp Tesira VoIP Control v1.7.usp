@@ -1,0 +1,2025 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name: Control Concepts, Inc.
+System Name: Biamp Tesira VoIP Conrtrol v1.7
+System Number:
+Programmer: JJM
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+// #ENABLE_DYNAMIC
+// #SYMBOL_NAME ""
+// #HINT ""
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+#DEFINE_CONSTANT MAX_COMMAND_SIZE 150
+#DEFINE_CONSTANT MAX_RESPONSE_SIZE 3000
+#DEFINE_CONSTANT MAX_SPEEDDIAL_ENTRIES 16
+#DEFINE_CONSTANT MAX_CALL_APPEARANCES 6
+
+#DEFINE_CONSTANT VOIP_CALL_STATE_INIT 1
+#DEFINE_CONSTANT VOIP_CALL_STATE_FAULT 2
+#DEFINE_CONSTANT VOIP_CALL_STATE_IDLE 3
+#DEFINE_CONSTANT VOIP_CALL_STATE_DIALTONE 4
+#DEFINE_CONSTANT VOIP_CALL_STATE_SILENT 5
+#DEFINE_CONSTANT VOIP_CALL_STATE_DIALING 6
+#DEFINE_CONSTANT VOIP_CALL_STATE_RINGBACK 7
+#DEFINE_CONSTANT VOIP_CALL_STATE_RINGING 8
+#DEFINE_CONSTANT VOIP_CALL_STATE_BUSY 10
+#DEFINE_CONSTANT VOIP_CALL_STATE_REJECT 11
+#DEFINE_CONSTANT VOIP_CALL_STATE_INVALID_NUMBER 12
+#DEFINE_CONSTANT VOIP_CALL_STATE_ACTIVE 13
+#DEFINE_CONSTANT VOIP_CALL_STATE_ACTIVE_MUTED 14
+#DEFINE_CONSTANT VOIP_CALL_STATE_ON_HOLD 15
+#DEFINE_CONSTANT VOIP_CALL_STATE_WAITING_RING 16
+#DEFINE_CONSTANT VOIP_CALL_STATE_CONF_ACTIVE 17
+#DEFINE_CONSTANT VOIP_CALL_STATE_CONF_HOLD 18
+
+#DEFINE_CONSTANT VOIP_PROMPT_NONE 1
+#DEFINE_CONSTANT VOIP_PROMPT_STARTING 2
+#DEFINE_CONSTANT VOIP_PROMPT_REGISTERING 3
+#DEFINE_CONSTANT VOIP_PROMPT_SIP_USER_NOT_CONFIGURED 6
+#DEFINE_CONSTANT VOIP_PROMPT_ENTER_NUMBER 7
+#DEFINE_CONSTANT VOIP_PROMPT_CONNECTING 8
+#DEFINE_CONSTANT VOIP_PROMPT_INCOMING_CALL_FROM 9
+#DEFINE_CONSTANT VOIP_PROMPT_PEER_BUSY 10
+#DEFINE_CONSTANT VOIP_PROMPT_CALL_CANNOT_BE_COMPLETED 11
+#DEFINE_CONSTANT VOIP_PROMPT_ON_HOLD 12
+#DEFINE_CONSTANT VOIP_PROMPT_CALL_ON_HELD 13
+#DEFINE_CONSTANT VOIP_PROMPT_CONFERENCE 14
+#DEFINE_CONSTANT VOIP_PROMPT_CONFERENCE_ON_HOLD 15
+#DEFINE_CONSTANT VOIP_PROMPT_CONNECTED 16 
+#DEFINE_CONSTANT VOIP_PROMPT_CONNECTED_MUTED 17
+#DEFINE_CONSTANT VOIP_PROMPT_AUTH_FAILURE 18
+#DEFINE_CONSTANT VOIP_PROMPT_PROXY_NOT_CONFIGURED 19
+#DEFINE_CONSTANT VOIP_PROMPT_NETWORK_INIT 20
+#DEFINE_CONSTANT VOIP_PROMPT_DHCP_IN_PROGRESS 21
+#DEFINE_CONSTANT VOIP_PROMPT_NETWORK_LINK_DOWN 22
+#DEFINE_CONSTANT VOIP_PROMPT_NETWORK_LINK_UP 23
+#DEFINE_CONSTANT VOIP_PROMPT_IPADDR_CONFLICT 24
+#DEFINE_CONSTANT VOIP_PROMPT_NETWORK_CONFIGURED 25
+#DEFINE_CONSTANT VOIP_PROMPT_CODEC_NEGOTIATION_FAILURE 26
+#DEFINE_CONSTANT VOIP_PROMPT_UNEXPECTED_ERROR 27
+#DEFINE_CONSTANT VOIP_PROMPT_AUTH_USER_NOT_CONFIGURED 28
+#DEFINE_CONSTANT VOIP_PROMPT_AUTH_PASSWORD_NOT_CONFIGURED 29
+                                                                                          
+#DEFINE_CONSTANT VOIP_CARD_DIALER_CLASS_ID 5126
+#DEFINE_CONSTANT VOIP_CARD_CONTROL_CLASS_ID 1032
+#DEFINE_CONSTANT VOIP_HD11_CONTROL_CLASS_ID 5128
+
+// #CATEGORY "" 
+// #PRINT_TO_TRACE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND 
+// #OUTPUT_SHIFT 
+// #HELP_PDF_FILE ""
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+//#ENABLE_TRACE
+#ENCODING_ASCII
+// #ENCODING_UTF16
+// #ENCODING_INHERIT_FROM_PARENT
+// #ENCODING_INHERIT_FROM_PROGRAM
+
+#HELP_BEGIN
+To be used with Biamp Tesira VoIP Control v1.7.umc module only.
+Not to be used as a stand-alone module.
+#HELP_END
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional libraries as needed)
+*******************************************************************************************/
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+
+DIGITAL_INPUT _SKIP_, _SKIP_, _SKIP_, _SKIP_;
+DIGITAL_OUTPUT _SKIP_, _SKIP_, _SKIP_, _SKIP_; 
+
+// Module Control / Status    
+DIGITAL_INPUT Poll_Dialer;                                                     
+DIGITAL_OUTPUT Is_Initialized;  
+     
+// Call Control
+ANALOG_INPUT Call_Select;
+DIGITAL_INPUT Conference, Answer, Flash, Redial, Send, End, Resume, Hold, On_Hook, Off_Hook;
+
+ANALOG_OUTPUT Selected_Call;
+ANALOG_OUTPUT Call_1_State, Call_2_State, Call_3_State, Call_4_State, Call_5_State, Call_6_State;
+STRING_OUTPUT Call_1_State$, Call_2_State$, Call_3_State$, Call_4_State$, Call_5_State$, Call_6_State$;
+STRING_OUTPUT Call_1_Prompt$, Call_2_Prompt$, Call_3_Prompt$, Call_4_Prompt$, Call_5_Prompt$, Call_6_Prompt$;
+
+STRING_OUTPUT Call_1_CID_Name$, Call_1_CID_Num$, Call_2_CID_Name$, Call_2_CID_Num$, Call_3_CID_Name$, Call_3_CID_Num$;
+STRING_OUTPUT Call_4_CID_Name$, Call_4_CID_Num$, Call_5_CID_Name$, Call_5_CID_Num$, Call_6_CID_Name$, Call_6_CID_Num$;
+
+DIGITAL_INPUT Keypad_0, Keypad_1, Keypad_2, Keypad_3, Keypad_4, Keypad_5, Keypad_6, Keypad_7, Keypad_8, Keypad_9, Keypad_Star, Keypad_Pound, Keypad_Clear, Keypad_BackSpace, Keypad_Dial;
+STRING_OUTPUT Keypad$, Last_Number_Dialed$;
+
+// Auto - Answer
+DIGITAL_INPUT AutoAnswer_On, AutoAnswer_Off, AutoAnswer_Toggle;
+DIGITAL_OUTPUT AutoAnswer_Is_On, AutoAnswer_Is_Off;
+                 
+// Directory Control
+DIGITAL_INPUT Directory_Top_Page, Directory_Next_Page, Directory_Previous_Page, Directory_Bottom_Page; 
+DIGITAL_INPUT Select_Directory_Item_01, Select_Directory_Item_02, Select_Directory_Item_03, Select_Directory_Item_04; 
+DIGITAL_INPUT Select_Directory_Item_05, Select_Directory_Item_06, Select_Directory_Item_07, Select_Directory_Item_08; 
+DIGITAL_INPUT Select_Directory_Item_09, Select_Directory_Item_10, Select_Directory_Item_11, Select_Directory_Item_12; 
+DIGITAL_INPUT Select_Directory_Item_13, Select_Directory_Item_14, Select_Directory_Item_15, Select_Directory_Item_16; 
+DIGITAL_INPUT Dial_Selected_Directory_Item; 
+DIGITAL_INPUT Save_Directory_Entry;                              
+ANALOG_INPUT Select_Directory_Save_Location;
+STRING_INPUT Directory_Save_Name$[50], Directory_Save_Num$[50];
+
+STRING_OUTPUT Directory_Item_01$, Directory_Item_02$, Directory_Item_03$, Directory_Item_04$;
+STRING_OUTPUT Directory_Item_05$, Directory_Item_06$, Directory_Item_07$, Directory_Item_08$;
+STRING_OUTPUT Directory_Item_09$, Directory_Item_10$, Directory_Item_11$, Directory_Item_12$;
+STRING_OUTPUT Directory_Item_13$, Directory_Item_14$, Directory_Item_15$, Directory_Item_16$;
+STRING_OUTPUT Selected_Directory_Item_Name$, Selected_Directory_Item_Num$;
+
+// DND
+DIGITAL_INPUT DND_Enabled, DND_Disabled, DND_Toggle;
+DIGITAL_INPUT DND_Response_DND, DND_Response_Busy, DND_Response_Decline;
+DIGITAL_OUTPUT DND_Is_Enabled, DND_Response_Is_DND, DND_Response_Is_Busy, DND_Response_Is_Decline;
+                                
+DIGITAL_INPUT AlphaNumeric_Entry_Dial;
+STRING_INPUT AlphaNumeric_Entry$[100];
+
+// Module Communication
+BUFFER_INPUT From_Processor$[10000];
+STRING_OUTPUT To_Processor$;
+/*******************************************************************************************
+  SOCKETS
+  (Uncomment and define socket definitions as needed)
+*******************************************************************************************/
+
+/*******************************************************************************************
+  Parameters
+  (Uncomment and declare parameters as needed)
+*******************************************************************************************/
+STRING_PARAMETER Dialer_InstanceTag[50], ControlStatus_InstanceTag[50];
+INTEGER_PARAMETER Line_Number;
+INTEGER_PARAMETER SpeedDialList_PageSize;
+/*******************************************************************************************
+  Parameter Properties
+  (Uncomment and declare parameter properties as needed)
+*******************************************************************************************/
+#BEGIN_PARAMETER_PROPERTIES Dialer_InstanceTag, ControlStatus_InstanceTag
+   propValidUnits = unitString;
+   propDefaultUnit = unitString;
+   propDefaultValue = "";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Line_Number
+   propValidUnits = unitDecimal;
+   propDefaultUnit = unitDecimal;
+   propBounds = 1d, 2d;
+   propDefaultValue = 1d;
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES SpeedDialList_PageSize
+   propValidUnits = unitDecimal;
+   propDefaultUnit = unitDecimal;
+   propBounds = 1d, 16d;
+   propDefaultValue = 16d;
+#END_PARAMETER_PROPERTIES
+
+/*******************************************************************************************
+  Structure Definitions
+  (Uncomment and define structure definitions as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: struct.myString = "";
+*******************************************************************************************/
+Structure SpeedDialEntry
+{
+	STRING label[50];
+	STRING defaultLabel[50];
+	STRING number[50];
+};
+
+Structure CallStatusInfo
+{
+	INTEGER status;
+	INTEGER prompt;
+	STRING cid[50];
+};
+         
+SpeedDialEntry speedDialList[MAX_SPEEDDIAL_ENTRIES];
+CallStatusInfo callStatus[MAX_CALL_APPEARANCES];
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+INTEGER myID;
+INTEGER x;
+////////////////////////////////////////////////////////////
+// Parsing Messages
+////////////////////////////////////////////////////////////
+INTEGER parsingModuleBusy;
+STRING parsedModuleMsg[MAX_RESPONSE_SIZE];
+INTEGER responseModuleMsgID;         
+STRING responseRequestMsg[MAX_COMMAND_SIZE];
+STRING responseMsg[MAX_RESPONSE_SIZE];           
+STRING parseString[MAX_COMMAND_SIZE];    
+INTEGER parseInt;    
+STRING trash[MAX_COMMAND_SIZE];
+
+////////////////////////////////////////////////////////////
+// callState Parsing
+////////////////////////////////////////////////////////////
+STRING callState[1024];
+								
+INTEGER state;
+INTEGER lineId;
+INTEGER callId;
+INTEGER action;
+
+////////////////////////////////////////////////////////////
+// Outgoing Messages
+////////////////////////////////////////////////////////////
+STRING outgoingMsg[MAX_COMMAND_SIZE];
+
+////////////////////////////////////////////////////////////
+// DialPad data
+////////////////////////////////////////////////////////////
+STRING dialPadText[50];
+           
+////////////////////////////////////////////////////////////
+// String Tokenizer
+////////////////////////////////////////////////////////////
+STRING statusTokens[10][MAX_COMMAND_SIZE];
+STRING token[MAX_COMMAND_SIZE];
+INTEGER statusTokenCount;
+
+////////////////////////////////////////////////////////////
+// SpeedDial Page List
+////////////////////////////////////////////////////////////
+INTEGER nQtyOfPages;
+INTEGER nCurrentPage;
+INTEGER nQtyEntriesOnLastPage;
+INTEGER nCurrentCount;
+INTEGER nCurrentPageSize;
+INTEGER nSelectedIndex;
+INTEGER IS_TOP;
+INTEGER IS_BOTTOM;
+
+////////////////////////////////////////////////////////////
+// MyClassCodes
+////////////////////////////////////////////////////////////
+INTEGER myStatusClassCode;
+INTEGER myDialerClassCode;
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+////////////////////////////////////////////////////////////
+// Module Communication Method Helpers
+////////////////////////////////////////////////////////////
+String_Function getBoundString(STRING source, STRING startString, STRING endString)
+{
+	INTEGER startIndex;
+	INTEGER endIndex;
+	STRING response[MAX_RESPONSE_SIZE];
+                                     
+    response = "";
+
+	IF (LEN(source) > 0)
+	{
+		startIndex = FIND(startString, source);
+		endIndex = FIND(endString, source, startIndex + 1);
+	
+		IF (startIndex > 0 && startIndex < endIndex)
+		{
+			startIndex = startIndex + LEN(startString);
+				
+			response = MID(source, startIndex, endIndex - startIndex);
+		}
+	}
+
+	RETURN (response);
+}
+
+Integer_Function stringTokenizer(STRING tokenList[], STRING stringMsg, STRING delimiter)
+{
+	INTEGER nStartLocation;
+	INTEGER nFoundLocation;
+	INTEGER item;
+	INTEGER clearItem;
+	STRING token[100];
+
+	item = 0;
+
+	nStartLocation = 1;
+
+	WHILE (TRUE)
+	{
+		nFoundLocation = FIND(delimiter, stringMsg, nStartLocation);
+
+		IF (nFoundLocation = 0)
+			break;
+
+		token = MID(stringMsg, nStartLocation, nFoundLocation - nStartLocation);
+
+		if (LEN(token) > 0)
+		{
+			if (item + 1 > GetNumArrayRows(tokenList))
+				break;
+
+			item = item + 1;
+
+			tokenList[item] = token;
+		}
+
+		nStartLocation = nFoundLocation + LEN(delimiter);	
+	}
+
+	IF (nStartLocation <= LEN(stringMsg) && (item + 1 <= GetNumArrayRows(tokenList)))
+	{
+		item = item + 1;
+
+		tokenList[item] = MID(stringMsg, nStartLocation, (LEN(stringMsg) - nStartLocation) + 1);
+	}
+
+	FOR (clearItem = item + 1 to GetNumArrayRows(tokenList))
+		tokenList[clearItem] = "";
+                                                       
+	return (item);
+}
+ 
+////////////////////////////////////////////////////////////
+// Protocol Method Helpers	
+////////////////////////////////////////////////////////////
+String_Function buildProtocolMsg(STRING instanceTag, STRING command, STRING control, INTEGER Index1, INTEGER Index2)
+{
+	STRING msg[MAX_COMMAND_SIZE];
+
+	msg = "";
+
+	IF (Index1 > 0 && Index2 > 0)
+		MakeString(msg,"%s %s %s %d %d", instanceTag, command, control, Index1, Index2);
+	ELSE IF (Index1 > 0 && Index2 = 0)
+		MakeString(msg,"%s %s %s %d", instanceTag, command, control, Index1);
+	ELSE IF (Index1 = 0 && Index2 > 0)
+		MakeString(msg,"%s %s %s %d", instanceTag, command, control, Index2);
+	ELSE
+		MakeString(msg,"%s %s %s", instanceTag, command, control);
+
+	RETURN (msg);
+}
+
+String_Function buildProtocolMsg_WithStringValue(STRING instanceTag, STRING command, STRING control, INTEGER Index1, INTEGER Index2, STRING value)
+{
+	STRING msg[MAX_COMMAND_SIZE];
+
+	msg = buildProtocolMsg(instanceTag, command, control, Index1, Index2);
+
+	MakeString(msg,"%s %s", msg, value);
+
+	RETURN (msg);
+}
+
+String_Function buildProtocolMsg_WithIntegerValue(STRING instanceTag, STRING command, STRING control, INTEGER Index1, INTEGER Index2, INTEGER value)
+{
+	STRING msg[MAX_COMMAND_SIZE];
+
+	msg = buildProtocolMsg(instanceTag, command, control, Index1, Index2);
+
+	MakeString(msg,"%s %d", msg, value);
+
+	RETURN (msg);
+}
+
+String_Function buildProtocolMsg_WithStateValue(STRING instanceTag, STRING command, STRING control, INTEGER Index1, INTEGER Index2, INTEGER state)
+{
+	STRING msg[MAX_COMMAND_SIZE];
+
+	msg = buildProtocolMsg(instanceTag, command, control, Index1, Index2);
+                                                  
+	IF (state = TRUE)
+		MakeString(msg,"%s true", msg);
+	ELSE
+		MakeString(msg,"%s false", msg);
+
+	RETURN (msg);
+}
+////////////////////////////////////////////////////////////
+// Initialize Method Helpers	
+////////////////////////////////////////////////////////////
+Function getAlias()
+{
+	STRING outgoingMsg[100];
+
+	myStatusClassCode = 0;
+	myDialerClassCode = 0;
+                              
+	MakeString(outgoingMsg,"SESSION get alias %s", Dialer_InstanceTag);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	MakeString(outgoingMsg,"SESSION get alias %s", ControlStatus_InstanceTag);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+}
+
+Function getInitialized()
+{
+	STRING subscribeObject[100];
+	INTEGER entry;
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "autoAnswer", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+                                                                                      
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "lastNum", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	MakeString(subscribeObject,"\x22[%d*%s]\x22", myID, "lastNum");
+
+	outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "subscribe", "lastNum", Line_Number, 0, subscribeObject);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	MakeString(subscribeObject,"\x22[%d*%s]\x22", myID, "callState");
+
+	outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "subscribe", "callState", 0, 0, subscribeObject);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "dndEnable", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "dndMode", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+                                    
+	IF (myDialerClassCode = VOIP_CARD_DIALER_CLASS_ID)
+	{
+		FOR (entry = 1 to MAX_SPEEDDIAL_ENTRIES)
+		{
+			outgoingMsg = buildProtocolMsg(Dialer_InstanceTag, "get", "speedDialLabel", Line_Number, entry);
+			MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+	
+			outgoingMsg = buildProtocolMsg(Dialer_InstanceTag, "get", "speedDialNum", Line_Number, entry);
+			MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "lineInUse", Line_Number, 1);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+}
+
+Function doPoll()
+{
+	STRING subscribeObject[100];
+	INTEGER entry;
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "autoAnswer", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "dndEnable", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+
+	outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "get", "dndMode", Line_Number, 0);
+	MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+                                        
+	IF (myDialerClassCode = VOIP_CARD_DIALER_CLASS_ID)
+    {
+		FOR (entry = 1 to MAX_SPEEDDIAL_ENTRIES)
+		{
+			outgoingMsg = buildProtocolMsg(Dialer_InstanceTag, "get", "speedDialLabel", Line_Number, entry);
+			MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+	
+			outgoingMsg = buildProtocolMsg(Dialer_InstanceTag, "get", "speedDialNum", Line_Number, entry);
+			MakeString(To_Processor$,"POLL_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}                          
+}
+
+////////////////////////////////////////////////////////////
+// String Method Helpers
+////////////////////////////////////////////////////////////
+Integer_Function startsWith(STRING MATCH_STRING, STRING SOURCE_STRING)
+{
+	RETURN (FIND(MATCH_STRING, SOURCE_STRING) = 1); 
+}
+
+Integer_Function contains(STRING MATCH_STRING, STRING SOURCE_STRING)
+{
+	RETURN (FIND(MATCH_STRING, SOURCE_STRING) > 0); 
+}
+                 
+Integer_Function ATOI_Signed(STRING value)
+{
+	IF (startsWith("-", value))
+		RETURN (0-ATOI(value));
+	ELSE
+		RETURN (ATOI(value));
+}
+
+String_Function trim(STRING value)
+{
+	WHILE(LEFT(value, 1) = "\x20")
+		value = RIGHT(value, LEN(value) - 1);
+
+	WHILE(RIGHT(value, 1) = "\x20")
+		value = LEFT(value, LEN(value) - 1);
+
+	RETURN (value);
+}
+
+////////////////////////////////////////////////////////////              
+// SpeedDial List Method Helpers
+////////////////////////////////////////////////////////////
+Function Select_SpeedDialEntry(INTEGER listItem)
+{
+	IF (listItem <= nCurrentPageSize)
+	{
+		nSelectedIndex = ((((nCurrentPage - 1) * nCurrentPageSize) + 1) + (listItem - 1));
+                                                      
+		IF (LEN(speedDialList[nSelectedIndex].label) > 0)
+			Selected_Directory_Item_Name$ = speedDialList[nSelectedIndex].label;
+		ELSE
+			Selected_Directory_Item_Name$ = speedDialList[nSelectedIndex].defaultLabel;
+
+		Selected_Directory_Item_Num$ = speedDialList[nSelectedIndex].number;
+	}
+}
+
+Function Display_SpeedDialEntry(INTEGER startIndex, INTEGER displayCount)
+{
+	STRING label[50];
+
+	IF (displayCount >= 1 && ((startIndex + 0) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 0].label) > 0)
+			label = speedDialList[startIndex + 0].label;
+		ELSE
+			label = speedDialList[startIndex + 0].defaultLabel;
+
+		Directory_Item_01$ = label;
+	}
+	ELSE
+		Directory_Item_01$ = "";
+
+	IF (displayCount >= 2 && ((startIndex + 1) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 1].label) > 0)
+			label = speedDialList[startIndex + 1].label;
+		ELSE
+			label = speedDialList[startIndex + 1].defaultLabel;
+
+		Directory_Item_02$ = label;
+	}
+	ELSE
+		Directory_Item_02$ = "";
+
+	IF (displayCount >= 3 && ((startIndex + 2) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 2].label) > 0)
+			label = speedDialList[startIndex + 2].label;
+		ELSE
+			label = speedDialList[startIndex + 2].defaultLabel;
+
+		Directory_Item_03$ = label;
+	}
+	ELSE
+		Directory_Item_03$ = "";
+
+	IF (displayCount >= 4 && ((startIndex + 3) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 3].label) > 0)
+			label = speedDialList[startIndex + 3].label;
+		ELSE
+			label = speedDialList[startIndex + 3].defaultLabel;
+
+		Directory_Item_04$ = label;
+	}
+	ELSE
+		Directory_Item_04$ = "";
+
+	IF (displayCount >= 5 && ((startIndex + 4) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 4].label) > 0)
+			label = speedDialList[startIndex + 4].label;
+		ELSE
+			label = speedDialList[startIndex + 4].defaultLabel;
+
+		Directory_Item_05$ = label;
+	}
+	ELSE
+		Directory_Item_05$ = "";
+
+	IF (displayCount >= 6 && ((startIndex + 5) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 5].label) > 0)
+			label = speedDialList[startIndex + 5].label;
+		ELSE
+			label = speedDialList[startIndex + 5].defaultLabel;
+
+		Directory_Item_06$ = label;
+	}
+	ELSE
+		Directory_Item_06$ = "";
+
+	IF (displayCount >= 7 && ((startIndex + 6) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 6].label) > 0)
+			label = speedDialList[startIndex + 6].label;
+		ELSE
+			label = speedDialList[startIndex + 6].defaultLabel;
+
+		Directory_Item_07$ = label;
+	}
+	ELSE
+		Directory_Item_07$ = "";
+
+	IF (displayCount >= 8 && ((startIndex + 7) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 7].label) > 0)
+			label = speedDialList[startIndex + 7].label;
+		ELSE
+			label = speedDialList[startIndex + 7].defaultLabel;
+
+		Directory_Item_08$ = label;
+	}
+	ELSE
+		Directory_Item_08$ = "";
+
+	IF (displayCount >= 9 && ((startIndex + 8) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 8].label) > 0)
+			label = speedDialList[startIndex + 8].label;
+		ELSE
+			label = speedDialList[startIndex + 8].defaultLabel;
+
+		Directory_Item_09$ = label;
+	}
+	ELSE
+		Directory_Item_09$ = "";
+
+	IF (displayCount >= 10 && ((startIndex + 9) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 9].label) > 0)
+			label = speedDialList[startIndex + 9].label;
+		ELSE
+			label = speedDialList[startIndex + 9].defaultLabel;
+
+		Directory_Item_10$ = label;
+	}
+	ELSE
+		Directory_Item_10$ = "";
+
+	IF (displayCount >= 11 && ((startIndex + 10) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 10].label) > 0)
+			label = speedDialList[startIndex + 10].label;
+		ELSE
+			label = speedDialList[startIndex + 10].defaultLabel;
+
+		Directory_Item_11$ = label;
+	}
+	ELSE
+		Directory_Item_11$ = "";
+
+	IF (displayCount >= 12 && ((startIndex + 11) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 11].label) > 0)
+			label = speedDialList[startIndex + 11].label;
+		ELSE
+			label = speedDialList[startIndex + 11].defaultLabel;
+
+		Directory_Item_12$ = label;
+	}
+	ELSE
+		Directory_Item_12$ = "";
+
+	IF (displayCount >= 13 && ((startIndex + 12) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 12].label) > 0)
+			label = speedDialList[startIndex + 12].label;
+		ELSE
+			label = speedDialList[startIndex + 12].defaultLabel;
+
+		Directory_Item_13$ = label;
+	}
+	ELSE
+		Directory_Item_13$ = "";
+
+	IF (displayCount >= 14 && ((startIndex + 13) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 13].label) > 0)
+			label = speedDialList[startIndex + 13].label;
+		ELSE
+			label = speedDialList[startIndex + 13].defaultLabel;
+
+		Directory_Item_14$ = label;
+	}
+	ELSE
+		Directory_Item_14$ = "";
+
+	IF (displayCount >= 15 && ((startIndex + 14) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 14].label) > 0)
+			label = speedDialList[startIndex + 14].label;
+		ELSE
+			label = speedDialList[startIndex + 14].defaultLabel;
+
+		Directory_Item_15$ = label;
+	}
+	ELSE
+		Directory_Item_15$ = "";
+
+	IF (displayCount >= 16 && ((startIndex + 15) <= MAX_SPEEDDIAL_ENTRIES))
+	{
+		IF (LEN(speedDialList[startIndex + 15].label) > 0)
+			label = speedDialList[startIndex + 15].label;
+		ELSE
+			label = speedDialList[startIndex + 15].defaultLabel;
+
+		Directory_Item_16$ = label;
+	}
+	ELSE
+		Directory_Item_16$ = "";
+}
+
+Function Clear_SpeedDialList()
+{
+	Display_SpeedDialEntry(1, 0);
+}
+
+Function Page_SpeedDialList(INTEGER nPage)
+{
+	IF (nPage > 0 && nPage <= nQtyOfPages)
+	{
+		IF (nPage = nQtyOfPages)
+			Display_SpeedDialEntry((((nPage - 1) * nCurrentPageSize) + 1), nQtyEntriesOnLastPage);
+		ELSE
+			Display_SpeedDialEntry((((nPage - 1) * nCurrentPageSize) + 1), nCurrentPageSize);
+			
+		nCurrentPage = nPage;
+
+		IS_TOP = (nCurrentPage = 1);
+		IS_BOTTOM = (nCurrentPage = nQtyOfPages);
+	}
+}
+
+Function Update_SpeedDialList(INTEGER nCount)
+{
+	nCurrentCount = nCount;
+	
+	IF (nCurrentCount > 0)
+	{
+		nQtyOfPages = (((nCurrentCount - 1) / nCurrentPageSize) + 1);
+		nQtyEntriesOnLastPage = (((nCurrentCount - 1) % nCurrentPageSize) + 1);
+	
+		IF (nCurrentPage = 0 || nCurrentPage > nQtyOfPages)
+			nCurrentPage = 1;
+			
+		Page_SpeedDialList(nCurrentPage);
+	}
+	ELSE
+	{
+		nQtyOfPages = 0;
+		nQtyEntriesOnLastPage = 0;
+		nCurrentPage = 0;
+
+		IS_TOP = TRUE;
+		IS_BOTTOM = TRUE;
+
+		Clear_SpeedDialList();
+	}
+        
+	IF (nCount > 0)
+	{
+		IS_TOP = (nCurrentPage = 1);
+		IS_BOTTOM = (nCurrentPage = nQtyOfPages);
+	}
+}
+   
+////////////////////////////////////////////////////////////
+// CALL Appearance
+////////////////////////////////////////////////////////////
+Function Display_LineAppearanceCID(INTEGER callAppearance, STRING cid)
+{
+	STRING label[50];
+	STRING num[50];
+                                                   
+	statusTokenCount = stringTokenizer(statusTokens, cid, "\x5c\x22");
+	
+	SWITCH (statusTokenCount)
+	{
+		CASE (4):
+		{
+			label = statusTokens[3];
+		}
+		CASE (5):
+		{
+			label = statusTokens[3];
+			num = statusTokens[4];
+		}
+	
+		DEFAULT:
+		{
+			label = "";
+			num = "";
+		}
+	}
+
+	SWITCH (callAppearance)
+	{
+		// CALL 1
+		CASE (1):
+		{
+			Call_1_CID_Name$ = label;
+			Call_1_CID_Num$ = num;
+		}
+
+		// CALL 2
+		CASE (2):
+		{
+			Call_2_CID_Name$ = label;
+			Call_2_CID_Num$ = num;
+		}
+
+		// CALL 3
+		CASE (3):
+		{
+			Call_3_CID_Name$ = label;
+			Call_3_CID_Num$ = num;
+		}
+
+		// CALL 4
+		CASE (4):
+		{
+			Call_4_CID_Name$ = label;
+			Call_4_CID_Num$ = num;
+		}
+
+		// CALL 5
+		CASE (5):
+		{
+			Call_5_CID_Name$ = label;
+			Call_5_CID_Num$ = num;
+		}
+
+		// CALL 6
+		CASE (6):
+		{
+			Call_6_CID_Name$ = label;
+			Call_6_CID_Num$ = num;	
+		}
+	}
+}
+
+Function Display_LineAppearanceState(INTEGER callAppearance, INTEGER state)
+{
+	STRING stateText[50];
+
+	SWITCH (state)
+	{
+		CASE (VOIP_CALL_STATE_INIT):
+		{
+			stateText = "Init";
+		}
+		CASE (VOIP_CALL_STATE_FAULT):
+		{
+			stateText = "Fault";
+		}
+		CASE (VOIP_CALL_STATE_IDLE):
+		{
+			stateText = "Idle";
+		}
+		CASE (VOIP_CALL_STATE_DIALTONE):
+		{
+			stateText = "Dial Tone";
+		}
+		CASE (VOIP_CALL_STATE_SILENT):
+		{
+			stateText = "Silent";
+		}
+		CASE (VOIP_CALL_STATE_DIALING):
+		{
+			stateText = "Dialing";
+		}
+		CASE (VOIP_CALL_STATE_RINGBACK):
+		{
+			stateText = "Ringback";
+		}
+		CASE (VOIP_CALL_STATE_RINGING):
+		{
+			stateText = "Incoming Call";
+		}
+		CASE (VOIP_CALL_STATE_BUSY):
+		{
+			stateText = "Busy";
+		}
+		CASE (VOIP_CALL_STATE_REJECT):
+		{
+			stateText = "Reject";
+		}
+		CASE (VOIP_CALL_STATE_INVALID_NUMBER):
+		{
+			stateText = "Invalid Number";
+		}
+		CASE (VOIP_CALL_STATE_ACTIVE):
+		{
+			stateText = "Active";
+		}
+		CASE (VOIP_CALL_STATE_ACTIVE_MUTED):
+		{
+			stateText = "Active Muted";
+		}
+		CASE (VOIP_CALL_STATE_ON_HOLD):
+		{
+			stateText = "On Hold";
+		}
+		CASE (VOIP_CALL_STATE_WAITING_RING):
+		{
+			stateText = "Waiting Ring";
+		}
+		CASE (VOIP_CALL_STATE_CONF_ACTIVE):
+		{
+			stateText = "Conference Active";
+		}
+		CASE (VOIP_CALL_STATE_CONF_HOLD):
+		{
+			stateText = "Conference Hold";
+		}
+	}
+
+	SWITCH (callAppearance)
+	{
+		// CALL 1
+		CASE (1):
+		{
+			Call_1_State = state;
+			Call_1_State$ = stateText;
+		}
+
+		// CALL 2
+		CASE (2):
+		{
+			Call_2_State = state;
+			Call_2_State$ = stateText;
+		}
+
+		// CALL 3
+		CASE (3):
+		{
+			Call_3_State = state;
+			Call_3_State$ = stateText;
+		}
+
+		// CALL 4
+		CASE (4):
+		{
+			Call_4_State = state;
+			Call_4_State$ = stateText;
+		}
+
+		// CALL 5
+		CASE (5):
+		{
+			Call_5_State = state;
+			Call_5_State$ = stateText;
+		}
+
+		// CALL 6
+		CASE (6):
+		{
+			Call_6_State = state;
+			Call_6_State$ = stateText;
+		}
+	}
+}
+
+Function Display_LineAppearancePrompt(INTEGER callAppearance, INTEGER prompt)
+{
+	STRING promptText[50];
+
+	promptText = "Unknown";
+                                       
+	SWITCH (prompt)
+	{
+		CASE (VOIP_PROMPT_NONE):
+		{
+			promptText = "None";
+		}
+		CASE (VOIP_PROMPT_STARTING):
+		{
+			promptText = "Starting";
+		}
+		CASE (VOIP_PROMPT_REGISTERING):
+		{
+			promptText = "Registering";
+		}
+		CASE (VOIP_PROMPT_SIP_USER_NOT_CONFIGURED):
+		{
+			promptText = "SIP User Not Configured";
+		}
+		CASE (VOIP_PROMPT_ENTER_NUMBER):
+		{
+			promptText = "Enter Number";
+		}
+		CASE (VOIP_PROMPT_CONNECTING):
+		{
+			promptText = "Connecting";
+		}
+		CASE (VOIP_PROMPT_INCOMING_CALL_FROM):
+		{
+			promptText = "Incoming Call";
+		}
+		CASE (VOIP_PROMPT_PEER_BUSY):
+		{
+			promptText = "Peer Busy";
+		}
+		CASE (VOIP_PROMPT_CALL_CANNOT_BE_COMPLETED):
+		{
+			promptText = "Call Cannont Be Completed";
+		}
+		CASE (VOIP_PROMPT_ON_HOLD):
+		{
+			promptText = "On Hold";
+		}
+		CASE (VOIP_PROMPT_CALL_ON_HELD):
+		{
+			promptText = "On Held";
+		}
+		CASE (VOIP_PROMPT_CONFERENCE):
+		{
+			promptText = "Conference";
+		}
+		CASE (VOIP_PROMPT_CONFERENCE_ON_HOLD):
+		{
+			promptText = "Conference On Hold";
+		}
+		CASE (VOIP_PROMPT_CONNECTED):
+		{
+			promptText = "Connected";
+		}
+		CASE (VOIP_PROMPT_CONNECTED_MUTED):
+		{
+			promptText = "Connected Muted";
+		}
+		CASE (VOIP_PROMPT_AUTH_FAILURE):
+		{
+			promptText = "Auth Failure";
+		}
+		CASE (VOIP_PROMPT_PROXY_NOT_CONFIGURED):
+		{
+			promptText = "Proxy Not Configured";
+		}
+		CASE (VOIP_PROMPT_NETWORK_INIT):
+		{
+			promptText = "Network Init";
+		}
+		CASE (VOIP_PROMPT_DHCP_IN_PROGRESS):
+		{
+			promptText = "DHCP In Progress";
+		}
+		CASE (VOIP_PROMPT_NETWORK_LINK_DOWN):
+		{
+			promptText = "Network Link Down";
+		}
+		CASE (VOIP_PROMPT_NETWORK_LINK_UP):
+		{
+			promptText = "Network Link Up";
+		}
+		CASE (VOIP_PROMPT_IPADDR_CONFLICT):
+		{
+			promptText = "IP Address Conflict";
+		}
+		CASE (VOIP_PROMPT_NETWORK_CONFIGURED):
+		{
+			promptText = "Network Configured";
+		}
+		CASE (VOIP_PROMPT_CODEC_NEGOTIATION_FAILURE):
+		{
+			promptText = "CODEC Negotiation Failure";
+		}
+		CASE (VOIP_PROMPT_UNEXPECTED_ERROR):
+		{
+			promptText = "Unexpected Error";
+		}
+		CASE (VOIP_PROMPT_AUTH_USER_NOT_CONFIGURED):
+		{
+			promptText = "Auth User Not Configured";
+		}
+		CASE (VOIP_PROMPT_AUTH_PASSWORD_NOT_CONFIGURED):
+		{
+			promptText = "Auth Password Not Configured";
+		}
+    }
+
+	SWITCH (callAppearance)
+	{
+		// CALL 1
+		CASE (1):
+			Call_1_Prompt$ = promptText;
+
+		// CALL 2
+		CASE (2):
+			Call_2_Prompt$ = promptText;
+
+		// CALL 3
+		CASE (3):
+			Call_3_Prompt$ = promptText;
+
+		// CALL 4
+		CASE (4):
+			Call_4_Prompt$ = promptText;
+
+		// CALL 5
+		CASE (5):
+			Call_5_Prompt$ = promptText;
+
+		// CALL 6
+		CASE (6):
+			Call_6_Prompt$ = promptText;
+	}
+}
+
+Function Update_CallAppearances()
+{
+	INTEGER callID;
+
+	FOR (callID = 1 to MAX_CALL_APPEARANCES)
+	{                                            	
+		Display_LineAppearanceState(callID, callStatus[callID].status); 
+		Display_LineAppearancePrompt(callID, callStatus[callID].prompt);
+		Display_LineAppearanceCID(callID, callStatus[callID].cid);	
+	}
+}
+
+Integer_Function callAppearance_AllowDTMF(INTEGER callAppearance)
+{
+	SWITCH (callAppearance)
+	{
+		// CALL 1
+		CASE (1):
+			RETURN (Call_1_State = VOIP_CALL_STATE_DIALTONE || Call_1_State = VOIP_CALL_STATE_ACTIVE || Call_1_State = VOIP_CALL_STATE_CONF_ACTIVE || Call_1_State = VOIP_CALL_STATE_SILENT);
+
+		// CALL 2
+		CASE (2):
+			RETURN (Call_2_State = VOIP_CALL_STATE_DIALTONE || Call_2_State = VOIP_CALL_STATE_ACTIVE || Call_2_State = VOIP_CALL_STATE_CONF_ACTIVE || Call_2_State = VOIP_CALL_STATE_SILENT);
+
+		// CALL 3
+		CASE (3):
+			RETURN (Call_3_State = VOIP_CALL_STATE_DIALTONE || Call_3_State = VOIP_CALL_STATE_ACTIVE || Call_3_State = VOIP_CALL_STATE_CONF_ACTIVE || Call_3_State = VOIP_CALL_STATE_SILENT);
+
+		// CALL 4
+		CASE (4):
+			RETURN (Call_4_State = VOIP_CALL_STATE_DIALTONE || Call_4_State = VOIP_CALL_STATE_ACTIVE || Call_4_State = VOIP_CALL_STATE_CONF_ACTIVE || Call_4_State = VOIP_CALL_STATE_SILENT);
+
+		// CALL 5
+		CASE (5):
+			RETURN (Call_5_State = VOIP_CALL_STATE_DIALTONE || Call_5_State = VOIP_CALL_STATE_ACTIVE || Call_5_State = VOIP_CALL_STATE_CONF_ACTIVE || Call_5_State = VOIP_CALL_STATE_SILENT);
+
+		// CALL 6
+		CASE (6):
+			RETURN (Call_6_State = VOIP_CALL_STATE_DIALTONE || Call_6_State = VOIP_CALL_STATE_ACTIVE || Call_6_State = VOIP_CALL_STATE_CONF_ACTIVE || Call_6_State = VOIP_CALL_STATE_SILENT);
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// DialPad Method Helpers
+////////////////////////////////////////////////////////////
+Function dialPadKeyPress(STRING keycode)
+{
+	MakeString(dialPadText,"%s%s", dialPadText, keyCode); 
+
+    IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+	{
+		IF (callAppearance_AllowDTMF(Call_Select) = TRUE && Is_Initialized = TRUE)
+		{
+			//outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "dtmf", ITOA(Line_Number), Call_Select, 0, keyCode);
+			outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "dtmf", ITOA(Line_Number), 0, 0, keyCode);		
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+	
+	Keypad$ = dialPadText;
+}
+
+Function dialPadClear()
+{
+	dialPadText = "";
+
+	Keypad$ = dialPadText;
+}
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+////////////////////////////////////////////////////////////              
+// Request Poll
+////////////////////////////////////////////////////////////
+PUSH Poll_Dialer
+{
+	IF (Is_Initialized = TRUE)
+		doPoll();
+}
+             
+////////////////////////////////////////////////////////////              
+// Call Control
+////////////////////////////////////////////////////////////
+CHANGE Call_Select
+{
+	IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+	{
+		IF (Selected_Call != Call_Select)
+		{
+			Selected_Call = Call_Select;
+			dialPadClear();
+		}
+	}
+}
+
+PUSH Conference
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "lconf", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Answer
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "answer", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Flash
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "flash", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Redial
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "redial", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Send
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "send", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH End
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "end", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Resume
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "resume", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Hold
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "hold", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH On_Hook
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "onHook", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+PUSH Off_Hook
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			outgoingMsg = buildProtocolMsg(ControlStatus_InstanceTag, "offHook", ITOA(Line_Number), Call_Select, 0);
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// AutoAnswer Control
+////////////////////////////////////////////////////////////
+PUSH AutoAnswer_On
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStateValue(ControlStatus_InstanceTag, "set", "autoAnswer", Line_Number, 0, TRUE);
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH AutoAnswer_Off
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStateValue(ControlStatus_InstanceTag, "set", "autoAnswer", Line_Number, 0, FALSE);
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH AutoAnswer_Toggle
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStateValue(ControlStatus_InstanceTag, "set", "autoAnswer", Line_Number, 0, !AutoAnswer_Is_On);		
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+                                   
+////////////////////////////////////////////////////////////              
+// DialPad Control
+////////////////////////////////////////////////////////////
+PUSH Keypad_0
+{
+	dialPadKeyPress("0");
+}
+
+PUSH Keypad_1
+{
+	dialPadKeyPress("1");
+}
+
+PUSH Keypad_2
+{
+	dialPadKeyPress("2");
+}
+
+PUSH Keypad_3
+{
+	dialPadKeyPress("3");
+}
+
+PUSH Keypad_4
+{
+	dialPadKeyPress("4");
+}
+
+PUSH Keypad_5
+{
+	dialPadKeyPress("5");
+}
+
+PUSH Keypad_6
+{
+	dialPadKeyPress("6");
+}
+
+PUSH Keypad_7
+{
+	dialPadKeyPress("7");
+}
+
+PUSH Keypad_8
+{
+	dialPadKeyPress("8");
+}
+
+PUSH Keypad_9
+{
+	dialPadKeyPress("9");
+}
+
+PUSH Keypad_Star
+{
+	dialPadKeyPress("*");
+}
+
+PUSH Keypad_Pound
+{
+	dialPadKeyPress("#");
+}
+
+PUSH Keypad_Clear
+{
+	dialPadClear();
+}
+             
+PUSH Keypad_BackSpace
+{
+	dialPadText = LEFT(dialPadText, LEN(dialPadText) - 1);
+
+	Keypad$ = dialPadText;
+}
+
+PUSH Keypad_Dial
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			IF (LEN(dialPadText) > 0)
+			{
+				outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "dial", ITOA(Line_Number), Call_Select, 0, dialPadText);		
+				MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+			}
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// AlphaNumeric Dial Control
+////////////////////////////////////////////////////////////
+PUSH AlphaNumeric_Entry_Dial
+{
+	STRING numberToDial[100];
+
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			IF (LEN(AlphaNumeric_Entry$) > 0)
+			{
+				MakeString(numberToDial, "\x22%s\x22", AlphaNumeric_Entry$);
+
+				outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "dial", ITOA(Line_Number), Call_Select, 0, numberToDial);		
+				MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+			}
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// DND Control
+////////////////////////////////////////////////////////////
+PUSH DND_Enabled
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStateValue(ControlStatus_InstanceTag, "set", "dndEnable", Line_Number, 0, TRUE);
+
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH DND_Disabled
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStateValue(ControlStatus_InstanceTag, "set", "dndEnable", Line_Number, 0, FALSE);
+
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH DND_Toggle
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStateValue(ControlStatus_InstanceTag, "set", "dndEnable", Line_Number, 0, !DND_Is_Enabled);
+
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH DND_Response_DND
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "set", "dndMode", Line_Number, 0, "DND_480");
+
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH DND_Response_Busy
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "set", "dndMode", Line_Number, 0, "DND_486");
+
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+PUSH DND_Response_Decline
+{
+	IF (Is_Initialized = TRUE)
+	{
+		outgoingMsg = buildProtocolMsg_WithStringValue(ControlStatus_InstanceTag, "set", "dndMode", Line_Number, 0, "DND_603");
+
+		MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// SpeedDial List Control
+////////////////////////////////////////////////////////////
+PUSH Directory_Top_Page
+{
+	IF (IS_TOP = FALSE)
+		Page_SpeedDialList(1);
+}
+
+PUSH Directory_Next_Page
+{
+	IF (IS_BOTTOM = FALSE)
+		Page_SpeedDialList(nCurrentPage+1);
+}
+
+PUSH Directory_Previous_Page
+{
+	IF (IS_TOP = FALSE)
+		Page_SpeedDialList(nCurrentPage-1);
+}
+
+PUSH Directory_Bottom_Page
+{
+	IF (IS_BOTTOM = FALSE)
+		Page_SpeedDialList(nQtyOfPages);
+}
+
+PUSH Select_Directory_Item_01
+{
+	Select_SpeedDialEntry(1);
+}
+
+PUSH Select_Directory_Item_02
+{
+	Select_SpeedDialEntry(2);
+}
+
+PUSH Select_Directory_Item_03
+{
+	Select_SpeedDialEntry(3);
+}
+
+PUSH Select_Directory_Item_04
+{
+	Select_SpeedDialEntry(4);
+}
+
+PUSH Select_Directory_Item_05
+{
+	Select_SpeedDialEntry(5);
+}
+
+PUSH Select_Directory_Item_06
+{
+	Select_SpeedDialEntry(6);
+}
+
+PUSH Select_Directory_Item_07
+{
+	Select_SpeedDialEntry(7);
+}
+
+PUSH Select_Directory_Item_08
+{
+	Select_SpeedDialEntry(8);
+}
+
+PUSH Select_Directory_Item_09
+{
+	Select_SpeedDialEntry(9);
+}
+
+PUSH Select_Directory_Item_10
+{
+	Select_SpeedDialEntry(10);
+}
+
+PUSH Select_Directory_Item_11
+{
+	Select_SpeedDialEntry(11);
+}
+
+PUSH Select_Directory_Item_12
+{
+	Select_SpeedDialEntry(12);
+}
+
+PUSH Select_Directory_Item_13
+{
+	Select_SpeedDialEntry(13);
+}
+
+PUSH Select_Directory_Item_14
+{
+	Select_SpeedDialEntry(14);
+}
+
+PUSH Select_Directory_Item_15
+{
+	Select_SpeedDialEntry(15);
+}
+
+PUSH Select_Directory_Item_16
+{
+	Select_SpeedDialEntry(16);
+}
+
+PUSH Dial_Selected_Directory_Item
+{
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Call_Select > 0 && Call_Select <= MAX_CALL_APPEARANCES)
+		{	
+			IF (nSelectedIndex > 0 && nSelectedIndex <= MAX_SPEEDDIAL_ENTRIES)
+			{
+				outgoingMsg = buildProtocolMsg_WithIntegerValue(Dialer_InstanceTag, "speedDial", ITOA(Line_Number), Call_Select, 0, nSelectedIndex);		
+				MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+			}
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// SpeedDial Entry Control
+////////////////////////////////////////////////////////////
+PUSH Save_Directory_Entry
+{
+	STRING label[50];
+	STRING num[50];
+                   
+	IF (Is_Initialized = TRUE)
+	{
+		IF (Select_Directory_Save_Location > 0 && Select_Directory_Save_Location <= MAX_SPEEDDIAL_ENTRIES)
+		{
+			MakeString(label,"\x22%s\x22", Directory_Save_Name$);
+			outgoingMsg = buildProtocolMsg_WithStringValue(Dialer_InstanceTag, "set", "speedDialLabel", Line_Number, Select_Directory_Save_Location, label);		
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+	
+			MakeString(num,"\x22%s\x22", Directory_Save_Num$);
+			outgoingMsg = buildProtocolMsg_WithStringValue(Dialer_InstanceTag, "set", "speedDialNum", Line_Number, Select_Directory_Save_Location, num);		
+			MakeString(To_Processor$,"COMMAND_MSG<%d|%s>", myID, outgoingMsg);
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////              
+// Processor Message Processing...
+////////////////////////////////////////////////////////////
+
+// Function for processing message received from Processor via CHANGE From_Processor$
+FUNCTION ProcessProcessorMsg()
+{
+    IF (LEN(parsedModuleMsg) > 0)
+    {
+        IF (startsWith("REGISTER", parsedModuleMsg))
+        {
+            myID = ATOI(getBoundString(parsedModuleMsg,"<",">"));
+            
+            IF (myID > 0)
+                MakeString(To_Processor$,"REGISTER<%d>", myID);
+        }
+        ELSE IF (startsWith("INIT", parsedModuleMsg))
+        {
+            Is_Initialized = FALSE;
+            getAlias();
+        }
+        ELSE IF (startsWith("RESPONSE_MSG", parsedModuleMsg))
+        {
+            responseRequestMsg = getBoundString(parsedModuleMsg,"<","|");
+            responseMsg = getBoundString(parsedModuleMsg,"|",">");
+
+            MakeString(To_Processor$,"RESPONSE_OK<%d|%s>", myID, responseRequestMsg);
+
+            IF (contains("get", responseRequestMsg))
+            {
+                IF (contains("lineInUse", responseRequestMsg))
+                {
+					IF (contains("+OK", responseMsg))
+                    {
+	                    IF (Is_Initialized = FALSE)
+	                    {
+	                        Is_Initialized = TRUE;
+	                        MakeString(To_Processor$,"INIT_DONE<%d>", myID);
+	                    }
+					}
+                }						
+                ELSE IF (contains("autoAnswer", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        AutoAnswer_Is_On = contains("true", responseMsg);
+                        AutoAnswer_Is_Off = contains("false", responseMsg);
+                    }
+                }
+                ELSE IF (contains("lastNum", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        trash = REMOVE("+OK ",responseMsg);
+                        parseString = getBoundString(responseMsg,"\x22","\x22");
+                        Last_Number_Dialed$ = parseString;
+                    }
+                }
+                ELSE IF (contains("dndEnable", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        DND_Is_Enabled = contains("true", responseMsg);
+                    }
+                }
+                ELSE IF (contains("dndMode", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        DND_Response_Is_DND = contains(" 1", responseMsg);
+                        DND_Response_Is_Busy = contains(" 2", responseMsg);
+                        DND_Response_Is_Decline = contains(" 3", responseMsg);
+                    }
+                }
+                ELSE IF (contains("speedDialLabel", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        trash = REMOVE(buildProtocolMsg(Dialer_InstanceTag, "get", "speedDialLabel", Line_Number, 0), responseRequestMsg);
+
+                        parseInt = ATOI(responseRequestMsg);
+                        
+                        IF (parseInt > 0 && parseInt <= MAX_SPEEDDIAL_ENTRIES)
+                        {
+                            trash = REMOVE("+OK ",responseMsg);
+                            parseString = getBoundString(responseMsg,"\x22","\x22");
+                            speedDialList[parseInt].label = parseString;
+        
+                            IF (parseInt = MAX_SPEEDDIAL_ENTRIES)
+                                Update_SpeedDialList(MAX_SPEEDDIAL_ENTRIES);
+                        } 
+                    }
+                }
+                ELSE IF (contains("speedDialNum", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        trash = REMOVE(buildProtocolMsg(Dialer_InstanceTag, "get", "speedDialNum", Line_Number, 0), responseRequestMsg);
+
+                        parseInt = ATOI(responseRequestMsg);
+                        
+                        IF (parseInt > 0 && parseInt <= MAX_SPEEDDIAL_ENTRIES)
+                        {
+                            trash = REMOVE("+OK ",responseMsg);
+                            parseString = getBoundString(responseMsg,"\x22","\x22");
+                            speedDialList[parseInt].number = parseString;
+                        } 
+                    }
+                }
+                ELSE IF (contains("alias", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {
+                        trash = REMOVE("+OK [",responseMsg);
+
+						IF (contains(Dialer_InstanceTag, responseRequestMsg))
+	                        myDialerClassCode = ATOI(getBoundString(responseMsg," "," "));
+
+						ELSE IF (contains(ControlStatus_InstanceTag, responseRequestMsg))
+	                        myStatusClassCode = ATOI(getBoundString(responseMsg," "," "));
+                                    
+						// NEED AT LEAST THE ControlStatus_InstanceTag               
+						IF (myStatusClassCode = VOIP_CARD_CONTROL_CLASS_ID || myStatusClassCode = VOIP_HD11_CONTROL_CLASS_ID)
+	                        getInitialized();
+                    }
+                }
+            }
+            ELSE IF (contains("set", responseRequestMsg))
+            {
+                IF (contains("autoAnswer", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {	
+                        AutoAnswer_Is_On = contains("true", responseRequestMsg);
+                        AutoAnswer_Is_Off = contains("false", responseRequestMsg);
+                    }
+                }
+                ELSE IF (contains("dndEnable", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        DND_Is_Enabled = contains("true", responseRequestMsg);
+                    }
+                }
+                ELSE IF (contains("dndMode", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        DND_Response_Is_DND = contains("DND_480", responseRequestMsg);
+                        DND_Response_Is_Busy = contains("DND_486", responseRequestMsg);
+                        DND_Response_Is_Decline = contains("DND_603", responseRequestMsg);
+                    }
+                }
+                ELSE IF (contains("speedDialLabel", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        trash = REMOVE(buildProtocolMsg(Dialer_InstanceTag, "set", "speedDialLabel", Line_Number, 0), responseRequestMsg);
+
+                        parseInt = ATOI(responseRequestMsg);
+                        
+                        IF (parseInt > 0 && parseInt <= MAX_SPEEDDIAL_ENTRIES)
+                        {
+                            parseString = getBoundString(responseRequestMsg,"\x22","\x22");
+                            speedDialList[parseInt].label = parseString;
+                            Update_SpeedDialList(MAX_SPEEDDIAL_ENTRIES);
+                        } 
+                    }
+                }
+                ELSE IF (contains("speedDialNum", responseRequestMsg))
+                {
+                    IF (contains("+OK", responseMsg))
+                    {			
+                        trash = REMOVE(buildProtocolMsg(Dialer_InstanceTag, "set", "speedDialNum", Line_Number, 0), responseRequestMsg);
+
+                        parseInt = ATOI(responseRequestMsg);
+                        
+                        IF (parseInt > 0 && parseInt <= MAX_SPEEDDIAL_ENTRIES)
+                        {
+                            parseString = getBoundString(responseRequestMsg,"\x22","\x22");
+                            speedDialList[parseInt].number = parseString;
+                        } 
+                    }
+                }
+            }
+            ELSE IF (contains("subscribe", responseRequestMsg))
+            {
+            }					
+        }
+        ELSE IF (startsWith("SUBSCRIBED_MSG", parsedModuleMsg))
+        {
+            responseMsg = getBoundString(parsedModuleMsg,"<",">");
+            
+            IF (contains("callState", responseMsg))
+            {		
+                trash = REMOVE("[[",responseMsg);
+             
+                WHILE (FIND("]",responseMsg) > 0)
+                {
+                    callState = REMOVE("]", responseMsg);
+                                                   
+                    IF (contains("[",callState))
+                    {
+                        trash = REMOVE("[", callState);
+                        
+                        state = ATOI(Remove(" ", callState));
+                        lineId = ATOI(Remove(" ", callState));
+                        callId = ATOI(Remove(" ", callState));
+                        action = ATOI(Remove(" ", callState));
+
+                        IF ((Line_Number = 1 && lineId = 0) || (Line_Number = 2 && lineId = 1))	
+                        {
+                            IF (callId >= 0 && callId < MAX_CALL_APPEARANCES)
+                            {
+                                callStatus[callId + 1].status = state;
+                                callStatus[callId + 1].cid = REMOVE("\x22 ",callState);
+                                callStatus[callId + 1].prompt = ATOI(REMOVE("]",callState));										
+                            }
+                        }
+                    }			
+                }
+                
+                Update_CallAppearances();
+            }
+            ELSE IF (contains("lastNum", responseMsg))
+            {
+                trash = REMOVE("]\x22",responseMsg);
+                parseString = getBoundString(responseMsg,"\x22","\x22");
+                Last_Number_Dialed$ = parseString;
+            }
+        }
+    }
+}
+
+#if_series3
+THREADSAFE CHANGE From_Processor$
+{
+    WHILE (TRUE)
+    {
+        try
+        {
+			parsedModuleMsg = GATHER(">", From_Processor$);
+
+			IF (contains(parsedModuleMsg, From_Processor$))
+				clearBuffer(From_Processor$);
+                    
+            ProcessProcessorMsg();
+        }
+        catch
+        {
+            print("Issue with Processor message handeling\n");
+        }
+    }
+}
+#else
+CHANGE From_Processor$
+{
+	IF (parsingModuleBusy = FALSE)
+	{
+		parsingModuleBusy = TRUE;
+                       
+		WHILE (TRUE)
+		{           
+			parsedModuleMsg = GATHER(">", From_Processor$);
+
+			IF (contains(parsedModuleMsg, From_Processor$))
+				clearBuffer(From_Processor$);
+                    
+            ProcessProcessorMsg();
+		}
+
+		parsingModuleBusy = FALSE;
+	}
+}
+#endif
+
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+Function Main()
+{
+    parsingModuleBusy = FALSE;
+
+   
+	Is_Initialized = FALSE;
+
+	nCurrentPageSize = SpeedDialList_PageSize;
+
+	nSelectedIndex = 0;
+    Selected_Directory_Item_Name$ = "";
+	Selected_Directory_Item_Num$ = "";
+
+	IS_TOP = FALSE;
+	IS_BOTTOM = FALSE;
+
+	myStatusClassCode = 0;
+	myDialerClassCode = 0;
+
+	FOR (x = 1 TO MAX_SPEEDDIAL_ENTRIES)
+	{
+		MakeString(speedDialList[x].label,"");
+		MakeString(speedDialList[x].number,"");
+		MakeString(speedDialList[x].defaultLabel,"SpeedDial Entry %d", x);
+	}
+
+	//WaitForInitializationComplete();
+}

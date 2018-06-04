@@ -1,0 +1,91 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.04.01
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,718,756,854,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=RVSE_Schedule_Timer_v2+
+  SmplCName=RVSE_Schedule_Timer_v2+.usp
+  Code=1
+  SysRev5=4.006
+  SMWRev=3.00.00
+  InputCue1=Clock
+  InputSigType1=Digital
+  InputCue2=Enable_Check_Status
+  InputSigType2=Digital
+  InputCue3=Enable_Auto_Request
+  InputSigType3=Digital
+  InputCue4=Enable_Slow_Auto_Request
+  InputSigType4=Digital
+  InputCue5=RoomView_Online
+  InputSigType5=Digital
+  OutputCue1=Trigger_Check_Status
+  OutputSigType1=Digital
+  OutputCue2=Trigger_Get_Schedule
+  OutputSigType2=Digital
+  InputList2Cue1=Clock_Interval
+  InputList2SigType1=Analog
+  InputList2Cue2=Check_Status_Frequency
+  InputList2SigType2=Analog
+  InputList2Cue3=Auto_Request_Frequency
+  InputList2SigType3=Analog
+  InputList2Cue4=Slow_Auto_Request_Frequency
+  InputList2SigType4=Analog
+  ParamCue1=[Reference Name]
+  MinVariableInputs=5
+  MaxVariableInputs=5
+  MinVariableInputsList2=4
+  MaxVariableInputsList2=4
+  MinVariableOutputs=2
+  MaxVariableOutputs=2
+  MinVariableOutputsList2=0
+  MaxVariableOutputsList2=0
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=32
+  Hint=
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_RVSE_Schedule_Timer_v2_
+  SymJam=NonExclusive
+  FileName=RVSE_Schedule_Timer_v2+.ush
+  SIMPLPlusModuleEncoding=0
+  clz1=Cisco SX80 Corporate Phone Book
+  clz2=Cisco SX80 Phone Book
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]

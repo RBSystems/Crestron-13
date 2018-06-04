@@ -1,0 +1,730 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer:
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+//#SYMBOL_NAME
+// #HINT ""
+#DEFINE_CONSTANT TRUE 1
+#DEFINE_CONSTANT FALSE 0
+
+#DEFINE_CONSTANT MAX_BUFF_SIZE	65000
+
+#DEFINE_CONSTANT MAX_FIELDS          25
+#DEFINE_CONSTANT MAX_FIELD_LINES     26
+
+#DEFINE_CONSTANT MAX_LIST_ITEMS      200
+
+
+
+#DEFINE_CONSTANT MAX_FIELD_TEXT_LEN  100
+#DEFINE_CONSTANT MAX_FIELD_DATA_LEN  200
+
+#DEFINE_CONSTANT MODE_ALL     0
+#DEFINE_CONSTANT MODE_IGNORE  1
+
+#DEFINE_CONSTANT FIELD_MODE_NONE							0
+#DEFINE_CONSTANT FIELD_MODE_ACTIVE_NO_SELECT	1
+#DEFINE_CONSTANT FIELD_MODE_ACTIVE_SELECT			2
+
+#DEFINE_CONSTANT DIR_UP		0
+#DEFINE_CONSTANT DIR_DN		1
+
+
+// #CATEGORY "" 
+#DEFAULT_VOLATILE
+// #DIGITAL_EXPAND 
+// #ANALOG_SERIAL_EXPAND
+#PRINT_TO_TRACE 
+// #OUTPUT_SHIFT 
+//#DEFAULT_NONVOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+/*
+#HELP_BEGIN
+   (add additional lines of help lines)
+#HELP_END
+*/
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional librarys as needed)
+*******************************************************************************************/
+// #CRESTRON_LIBRARY ""
+// #USER_LIBRARY ""
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+
+DIGITAL_INPUT Debug,
+              Debug_Print_Current_List,
+              Enable_Field_Select,
+              First_Page,
+              Last_Page,
+              Page_Up,
+              Page_Down,
+              Select_Up,
+              Select_Down,
+              Select_Select,
+              Clear_Selection,
+              Disable_Current_Selection;
+               
+ANALOG_INPUT Items_Per_Page;
+ 
+//STRING_INPUT
+ 
+BUFFER_INPUT Data_In$[MAX_BUFF_SIZE]; 
+
+DIGITAL_OUTPUT Module_Busy_FB,
+							 Sorting_List_FB,
+               Enable_Scroll_Buttons_FB; 
+
+ANALOG_OUTPUT Field_Selected; 
+
+STRING_OUTPUT Status$,
+							PageOf$,
+              Field_Selected_Text$,
+              Field_Selected_Data1$,
+              Field_Selected_Data2$,
+              Field_Selected_Data3$,
+              Field_Selected_Data4$;
+
+/*** Array Def ***/
+
+DIGITAL_INPUT Select_Field[MAX_FIELDS];
+
+ANALOG_OUTPUT Field_Mode[MAX_FIELDS];
+
+STRING_OUTPUT Field_Text$[MAX_FIELDS]; 
+
+/*******************************************************************************************
+  Structure Definitions
+  (Uncomment and define structure definitions as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: struct.myString = "";
+*******************************************************************************************/
+
+STRUCTURE Data
+{
+  integer bDisabled;
+  
+  string FieldText[MAX_FIELD_TEXT_LEN];
+  string FieldData1[MAX_FIELD_DATA_LEN];
+  string FieldData2[MAX_FIELD_DATA_LEN];
+  string FieldData3[MAX_FIELD_DATA_LEN];
+  string FieldData4[MAX_FIELD_DATA_LEN];
+};
+
+Data Item[MAX_LIST_ITEMS];
+
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+INTEGER g_bRXOK,
+				g_bReceivingList;
+				
+INTEGER g_iFieldQty;
+
+INTEGER g_iTotalItems,
+				g_iRequiredPages,
+				g_iCurrentPage,
+				g_iOffset;
+				
+// LONG_INTEGER
+// SIGNED_INTEGER
+// SIGNED_LONG_INTEGER
+
+STRING g_sTempData[500];
+
+INTEGER g_iFieldSelected,
+				g_iFieldIndex[MAX_FIELDS];
+
+STRING g_sData[MAX_BUFF_SIZE];
+
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+
+Function ProcessListData(string sData)
+{
+  string sRemoved[255],
+  			 sFieldText[MAX_FIELD_TEXT_LEN],
+  			 sFieldData1[MAX_FIELD_DATA_LEN],
+  			 sFieldData2[MAX_FIELD_DATA_LEN],
+  			 sFieldData3[MAX_FIELD_DATA_LEN],
+  			 sFieldData4[MAX_FIELD_DATA_LEN];
+  			 
+  integer iIndex;
+  
+  if (Debug)
+  {
+    trace ("***ProcessListData***\n");
+    trace ("sData: %s", sData);
+  }
+  iIndex = 0;
+  
+  do
+  {
+  	sRemoved = remove(">", sData);
+  	
+  	if (find("<Item>", sRemoved))
+  	{    
+    	sFieldText = "";
+    	sFieldData1 = "";
+    	sFieldData2 = "";
+    	sFieldData3 = "";
+    	sFieldData4 = ""; 
+  	}
+  	else if (find("</FieldText>", sRemoved))
+  	{
+    	sFieldText = left(sRemoved, len(sRemoved) - 12);
+  	}
+  	else if (find("</FieldData1>", sRemoved))
+  	{
+    	sFieldData1 = left(sRemoved, len(sRemoved) - 13);
+  	}
+  	else if (find("</FieldData2>", sRemoved))
+  	{
+    	sFieldData2 = left(sRemoved, len(sRemoved) - 13);
+  	}
+  	else if (find("</FieldData3>", sRemoved))
+  	{
+    	sFieldData3 = left(sRemoved, len(sRemoved) - 13);
+  	}
+  	else if (find("</FieldData4>", sRemoved))
+  	{
+    	sFieldData4 = left(sRemoved, len(sRemoved) - 13);
+  	}
+  	else if (find("</Item>", sRemoved))
+  	{
+  		iIndex = iIndex + 1;
+  	  
+  	  Item[iIndex].bDisabled = FALSE;
+  		Item[iIndex].FieldText = sFieldText;
+  		Item[iIndex].FieldData1 = sFieldData1;
+  		Item[iIndex].FieldData2 = sFieldData2;
+  		Item[iIndex].FieldData3 = sFieldData3;
+  		Item[iIndex].FieldData4 = sFieldData4;
+  	}  	
+  } until (len(sData) = 0);
+  
+  g_iTotalItems = iIndex;
+}
+
+
+
+Function ClearFields(integer iStartIndex)
+{
+  integer i, iIndex;
+  
+  if (Debug)
+  {
+  	print ("\n** ClearFields **\n");
+  	print ("  StartIndex:%u\n", iStartIndex);  
+  }
+  
+  for (i = iStartIndex to Items_Per_Page)
+  {    
+    Field_Text$[i] = "";
+    g_iFieldIndex[i] = 0;
+    
+    Field_Mode[i] = FALSE;
+  }
+}
+
+
+Function UpdateFields()
+{
+  integer i,
+  				iIndex,
+  				iLastActiveField;
+  				
+  integer iFieldIndex;
+  
+  integer bDisabled;
+  
+  if (Debug)
+   print ("\n** UpdateFields **\n");
+  
+  iLastActiveField = 0;
+  
+
+  if (g_iRequiredPages = 1)
+   PageOf$ = "1 of 1";
+  else
+   PageOf$ = itoa(g_iCurrentPage) + " of " + itoa(g_iRequiredPages);
+  
+  
+  if (g_iRequiredPages > 1)
+   g_iOffset = (g_iCurrentPage * ITEMS_PER_PAGE) - (ITEMS_PER_PAGE - 1);
+  else
+   g_iOffset = 1;
+  
+   if (Debug)
+   {
+     print ("   Offset:%u\n", g_iOffset);
+   }
+  
+  for (i = 1 to Items_Per_Page)
+  {
+    iIndex = (i - 1) + g_iOffset;
+    
+    if (iIndex <= g_iTotalItems)
+    {
+      bDisabled = Item[iIndex].bDisabled;
+      
+      Field_Text$[i] = Item[iIndex].FieldText;
+      g_iFieldIndex[i] = iIndex;
+
+      // Enable field select?
+      if (Enable_Field_Select)
+      {
+      	// Yes, enable field select.
+      	
+      	// Individual item enabled?
+      	if (!bDisabled)
+      	{
+      		// Yes, individual item enabled.
+      		Field_Mode[i] = FIELD_MODE_ACTIVE_SELECT;
+      	}
+      	else
+      	{
+      		// No, individual item not enabled.
+      		Field_Mode[i] = FIELD_MODE_ACTIVE_NO_SELECT;
+      	}
+      }
+      else
+      {
+      	// Field select not enabled.
+      	Field_Mode[i] = FIELD_MODE_ACTIVE_NO_SELECT;
+      }
+      
+      iLastActiveField = i;
+    }
+    else
+    {
+      Field_Mode[i] = FIELD_MODE_NONE;
+    }
+  }
+  
+  if (Debug)
+   print ("   Last Active Field:%u\n", iLastActiveField);  
+  
+  //clear the inactive fields
+  if (iLastActiveField <> Items_Per_Page)
+   call ClearFields(iLastActiveField + 1);
+}
+
+
+Function ProcessCommandData(string sData)
+{
+  if (Debug)
+   print ("\n** ProcessCommandData **\n");	
+}
+
+Function SetNextValidField(integer iDirection)
+{
+  integer i,
+  				iStartIndex,
+  				iCurrentFieldIndex,
+  				iNextValidIndex,
+  				iNeededPage,
+  				iPageStartIndex;
+  
+  if (Debug)
+  {
+  	print ("\n** SetNextValidField **\n");
+  	print ("  Direction:%u\n", iDirection);
+	}
+	
+	iNextValidIndex = 0;
+	iNeededPage = 0;
+	iPageStartIndex = 0;
+	
+	// Is there a field selected yet?
+	if (g_iFieldSelected > 0)
+	{
+	  if (Debug)
+	   print ("  Current field selected:%u\n", g_iFieldSelected);
+		
+		
+		// Get the current index.
+		iCurrentFieldIndex = g_iFieldIndex[g_iFieldSelected];
+	
+		if (Debug)
+		{
+			print ("  CurrentFieldIndex:%u\n", iCurrentFieldIndex);
+		}
+		
+		if (iDirection = DIR_UP)
+		{
+			// Direction up.
+			
+			// Any items left prior to the current index?
+			if (iCurrentFieldIndex > 1)
+			{
+				// Yes, there are items left.
+				
+				iStartIndex = iCurrentFieldIndex - 1;
+				
+				// Find the next valid index.
+				for (i = iStartIndex to 1 Step -1)
+				{
+					if (len(Item[i].FieldText) > 0 && !Item[i].bDisabled)
+					{
+						iNextValidIndex = i;
+						break;					
+					}
+				}
+			}
+			 
+		}
+		else
+		{
+			// Direction down.
+			
+			// Any items left after the current index?
+			if (iCurrentFieldIndex < g_iTotalItems)
+			{
+				// Yes, there are items left.
+				
+				iStartIndex = iCurrentFieldIndex + 1;
+				
+				// Find the next valid index.
+				for (i = iStartIndex to g_iTotalItems)
+				{
+					if (len(Item[i].FieldText) > 0 && !Item[i].bDisabled)
+					{
+						iNextValidIndex = i;
+						break;					
+					}			
+				}
+			}
+		}
+		
+		// Have an index?
+		if (iNextValidIndex > 0)
+		{
+			// Yes, have next valid index.
+	
+			if (Debug)
+			{
+				print ("  Have valid index:%u\n", iNextValidIndex);
+			}
+			
+			// Figure out what page we need.
+			iNeededPage = ((iNextValidIndex - 1) / Items_Per_Page) + 1;
+			
+			// Figure out the field we need.
+			iPageStartIndex = ((iNeededPage - 1) * Items_Per_Page) + 1;
+			
+	    g_iFieldSelected = iNextValidIndex - iPageStartIndex + 1;
+	    Field_Selected = g_iFieldSelected;
+	
+			if (Debug)
+			{
+				print ("  NeededPage:%u\n", iNeededPage);
+				print ("  PageStartIndex:%u\n", iPageStartIndex);
+				print ("  FieldSelected:%u\n", g_iFieldSelected);
+			}		
+			
+			// Page different than current?
+			if (iNeededPage != g_iCurrentPage)
+			{
+				// Yes, it is different. Need to update UI.
+				
+				g_iCurrentPage = iNeededPage;
+				
+				call UpdateFields();
+			}
+		}
+		else
+		{
+			if (Debug)
+			{
+				print ("  Do not have valid index\n");
+			}
+		}
+	}
+	else
+	{
+		// No field selected yet.
+		
+		if (Debug)
+	   print (" No field selected yet.\n");
+	   
+	  g_iFieldSelected = 1;
+	  Field_Selected = 1;
+	}
+}
+
+Function ProcessDataIn$(string sData)
+{
+  if (Debug)
+  {
+  	print ("\n** ProcessDataIn$ **\n");
+	}
+  
+  Module_Busy_FB = TRUE;    	
+    	
+  if (find("<Type>List</Type>", sData))
+  {    	  
+    call ProcessListData(sData);
+    	
+    if (Debug)
+     print ("**Total Items Stored:%u **\n", g_iTotalItems);
+        
+    //process new data data
+    if (g_iTotalItems > 0)
+    {          
+      if (g_iTotalItems <= Items_Per_Page)
+      {
+        g_iRequiredPages = 1;
+      }
+      else
+      {        
+        g_iRequiredPages = g_iTotalItems / Items_Per_Page;
+        
+        if (g_iTotalItems MOD Items_Per_Page)
+        {
+        	g_iRequiredPages = g_iRequiredPages + 1;        	
+        }
+      }
+        
+      g_iCurrentPage = 1;
+      g_iFieldSelected = 0;
+      Field_Selected = 0;        
+          
+      //update the UI outputs
+      call UpdateFields();        
+    }
+    else //no data
+    {          
+      g_iRequiredPages = 0;
+      g_iCurrentPage = 0;
+      g_iFieldSelected = 0;
+      Field_Selected = 0;
+    }
+      
+  }
+  else if (find("<Type>Command</Type>", sData))
+  {
+    call ProcessCommandData(sData);
+  }
+      
+  Module_Busy_FB = FALSE;
+}
+
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+
+
+PUSH Debug_Print_Current_List
+{
+  integer i;
+  
+  for (i = 1 to g_iTotalItems)
+  {
+    print ("FieldText:%s\n", Item[i].FieldText);
+    print ("FieldData1:%s\n", Item[i].FieldData1);
+    print ("FieldData2:%s\n", Item[i].FieldData2);
+    print ("FieldData3:%s\n", Item[i].FieldData3);
+    print ("FieldData4:%s\n", Item[i].FieldData4); 
+    print ("Disabled:%u\n", Item[i].bDisabled);
+  }
+}
+
+PUSH Enable_Field_Select
+{
+	call UpdateFields();	
+}
+
+RELEASE Enable_Field_Select
+{
+	call UpdateFields();
+}
+
+PUSH First_Page
+{
+  g_iCurrentPage = 1;
+  
+  call UpdateFields();
+}
+
+PUSH Last_Page
+{
+  g_iCurrentPage = g_iRequiredPages;
+  
+  call UpdateFields();
+}
+
+PUSH Page_Up
+{
+  if (g_iCurrentPage > 1)
+   g_iCurrentPage = g_iCurrentPage - 1;
+
+  call UpdateFields();
+}
+
+PUSH Page_Down
+{
+  if (g_iCurrentPage < g_iRequiredPages)
+   g_iCurrentPage = g_iCurrentPage + 1;
+  
+  call UpdateFields();
+}
+
+PUSH Select_Up
+{
+  if (Enable_Field_Select)
+   call SetNextValidField(DIR_UP);
+}
+
+PUSH Select_Down
+{
+  if (Enable_Field_Select)
+   call SetNextValidField(DIR_DN);
+}
+
+PUSH Select_Select
+{
+  integer iFieldIndex;
+  
+  if (Enable_Field_Select)
+  {
+  	iFieldIndex = g_iFieldIndex[g_iFieldSelected];
+    
+    // Data in the field and field is not disabled
+  	if (len(Item[iFieldIndex].FieldText) > 0 && !Item[iFieldIndex].bDisabled)
+  	{    
+    	Field_Selected_Text$ = Item[iFieldIndex].FieldText;
+    	Field_selected_Data1$ = Item[iFieldIndex].FieldData1;
+    	Field_selected_Data2$ = Item[iFieldIndex].FieldData2;
+    	Field_selected_Data3$ = Item[iFieldIndex].FieldData3;
+    	Field_selected_Data4$ = Item[iFieldIndex].FieldData4;    
+  	}
+  }
+}
+
+PUSH Clear_Selection
+{
+	g_iFieldSelected = 0;
+  Field_Selected = 0;
+    
+  Field_Selected_Text$ = "";
+  Field_selected_Data1$ = "";
+  Field_selected_Data2$ = "";
+  Field_selected_Data3$ = "";
+  Field_selected_Data4$ = "";	
+}
+
+PUSH Disable_Current_Selection
+{
+	integer iFieldIndex;
+	
+	string sFieldText[MAX_FIELD_TEXT_LEN];
+	
+	iFieldIndex = g_iFieldIndex[g_iFieldSelected];
+	
+	Item[iFieldIndex].bDisabled = TRUE;
+	
+	// Remove the room name only and add " - Reserved" to end.
+	sFieldText = remove("\r", Item[iFieldIndex].FieldText);
+	sFieldText = sFieldText + " - Reserved: Not Available";
+	
+	// Re-assign new field text.
+	Item[iFieldIndex].FieldText = sFieldText;
+	
+	call UpdateFields();		
+}
+
+PUSH Select_Field
+{
+  integer iIndex, iFieldIndex;
+  
+  iIndex = getlastmodifiedarrayindex();
+  
+  if (Field_Mode[iIndex] = FIELD_MODE_ACTIVE_SELECT)
+  {
+  
+  	iFieldIndex = g_iFieldIndex[iIndex];
+  	
+    g_iFieldSelected = iIndex;
+    Field_Selected = iIndex;
+    
+    Field_Selected_Text$ = Item[iFieldIndex].FieldText;
+    Field_selected_Data1$ = Item[iFieldIndex].FieldData1;
+    Field_selected_Data2$ = Item[iFieldIndex].FieldData2;
+    Field_selected_Data3$ = Item[iFieldIndex].FieldData3;
+    Field_selected_Data4$ = Item[iFieldIndex].FieldData4;
+  }
+}
+
+
+
+
+CHANGE Data_In$
+{  
+  
+  if (g_bRXOK)
+  {
+    g_bRXOK = FALSE;
+    
+    while (1)
+    {
+    	g_sData = gather("</Data>", Data_In$);
+      
+  		call ProcessDataIn$(g_sData);
+    }
+  }
+}
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+
+Function Main()
+{
+  integer i;
+  
+  WaitForInitializationComplete();
+  
+  g_bRXOK = TRUE;
+  g_bReceivingList = FALSE;
+  
+  g_sData = "";
+  
+  g_iTotalItems = 0;
+  g_iRequiredPages = 0;
+  
+  Enable_Scroll_Buttons_FB = FALSE; 
+  
+  //clear outputs    
+  call ClearFields(1);
+}
+
+

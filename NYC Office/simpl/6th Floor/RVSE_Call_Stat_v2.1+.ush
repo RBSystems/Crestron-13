@@ -1,0 +1,95 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.04.01
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,718,756,854,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=RVSE_Call_Stat_v2.1+
+  SmplCName=RVSE_Call_Stat_v2.1+.usp
+  Code=1
+  SysRev5=4.006
+  SMWRev=3.00.00
+  InputCue1=Debug
+  InputSigType1=Digital
+  InputCue2=Enable_Log_On_ID_Change
+  InputSigType2=Digital
+  InputCue3=RV_Online
+  InputSigType3=Digital
+  InputCue4=Clock
+  InputSigType4=Digital
+  InputCue5=Asset_Offhook_FB
+  InputSigType5=Digital
+  InputList2Cue1=Min_Success_Time_Sec
+  InputList2SigType1=Analog
+  InputList2Cue2=Meeting_ID$
+  InputList2SigType2=Serial
+  InputList2Cue3=Asset_ID$
+  InputList2SigType3=Serial
+  InputList2Cue4=Asset_Type$
+  InputList2SigType4=Serial
+  InputList2Cue5=Asset_Name$
+  InputList2SigType5=Serial
+  InputList2Cue6=Call_Number$
+  InputList2SigType6=Serial
+  OutputList2Cue1=Last_Call_Minutes
+  OutputList2SigType1=Analog
+  OutputList2Cue2=To_RV_Device_Usage$
+  OutputList2SigType2=Serial
+  ParamCue1=[Reference Name]
+  MinVariableInputs=5
+  MaxVariableInputs=5
+  MinVariableInputsList2=6
+  MaxVariableInputsList2=6
+  MinVariableOutputs=0
+  MaxVariableOutputs=0
+  MinVariableOutputsList2=2
+  MaxVariableOutputsList2=2
+  MinVariableParams=0
+  MaxVariableParams=0
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=32
+  Hint=
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  MPp=1
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_RVSE_Call_Stat_v2_1_
+  SymJam=NonExclusive
+  FileName=RVSE_Call_Stat_v2.1+.ush
+  SIMPLPlusModuleEncoding=0
+  clz1=Cisco SX80 Corporate Phone Book
+  clz2=Cisco SX80 Phone Book
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]

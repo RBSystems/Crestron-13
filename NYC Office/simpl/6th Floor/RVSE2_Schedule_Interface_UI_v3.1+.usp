@@ -1,0 +1,3002 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer:
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+//#SYMBOL_NAME
+
+/*** VERSION HISTORY
+   
+  v1a
+  ====
+   -initial release
+
+****/
+
+
+// #HINT ""
+#DEFINE_CONSTANT TRUE   1
+#DEFINE_CONSTANT FALSE  0
+
+#DEFINE_CONSTANT MAX_TIME_BLOCKS 48
+
+#DEFINE_CONSTANT MAX_NAME_LEN 					100
+#DEFINE_CONSTANT MAX_WELCOME_MSG_LEN 		150
+#DEFINE_CONSTANT MAX_SUBJECT_LEN 				255
+#DEFINE_CONSTANT MAX_ORGANIZER_LEN			75
+#DEFINE_CONSTANT MAX_TEMP_SUBJECT_LEN 	1500
+#DEFINE_CONSTANT MAX_ATTENDEES 					10
+#DEFINE_CONSTANT MAX_MEETING_ID_LEN			160
+#DEFINE_CONSTANT MAX_INSTANCE_ID_LEN		160
+#DEFINE_CONSTANT MAX_RV_MEETING_ID_LEN 	50
+
+#DEFINE_CONSTANT TYPE_DAY    1
+#DEFINE_CONSTANT TYPE_WORK   2
+
+#DEFINE_CONSTANT SCHED_NODE_ROOT         			1
+#DEFINE_CONSTANT SCHED_NODE_MEETING         	2
+#DEFINE_CONSTANT SCHED_NODE_LIVE_MEETING     	3
+#DEFINE_CONSTANT SCHED_NODE_MEETING_SUBJECT 	4
+#DEFINE_CONSTANT SCHED_NODE_WELCOME_MSG      	5
+#DEFINE_CONSTANT SCHED_NODE_RESOURCES			   	6
+
+#DEFINE_CONSTANT ATTEN_NODE_ROOT         			1
+#DEFINE_CONSTANT ATTEN_NODE_REQUIRED					2
+#DEFINE_CONSTANT ATTEN_NODE_OPTIONAL					3
+
+#DEFINE_CONSTANT LINE_MODE_INACTIVE 0
+#DEFINE_CONSTANT LINE_MODE_ACTIVE   1
+#DEFINE_CONSTANT LINE_MODE_BLANK    2
+
+#DEFINE_CONSTANT BLOCK_MODE_NONE					0
+#DEFINE_CONSTANT BLOCK_MODE_UP_DN					1
+#DEFINE_CONSTANT BLOCK_MODE_UP						2
+#DEFINE_CONSTANT BLOCK_MODE_MID						3
+#DEFINE_CONSTANT BLOCK_MODE_DN						4
+#DEFINE_CONSTANT BLOCK_MODE_UP_DN_MORE		5
+#DEFINE_CONSTANT BLOCK_MODE_UP_MORE				6
+#DEFINE_CONSTANT BLOCK_MODE_UP_DN_PRIV		7
+#DEFINE_CONSTANT BLOCK_MODE_UP_PRIV				8
+#DEFINE_CONSTANT BLOCK_MODE_UP_DN_MORE_A	9
+#DEFINE_CONSTANT BLOCK_MODE_UP_MORE_A			10
+
+#DEFINE_CONSTANT RECEIVE  1
+#DEFINE_CONSTANT REQUEST  2
+#DEFINE_CONSTANT ERROR    3
+
+#DEFINE_CONSTANT REQUEST_MODE_IDLE				0
+#DEFINE_CONSTANT REQUEST_MODE_BUSY				1
+#DEFINE_CONSTANT REQUEST_MODE_PROCESSING	2
+#DEFINE_CONSTANT REQUEST_MODE_SUCCESS			3
+#DEFINE_CONSTANT REQUEST_MODE_FAILURE			4
+
+//#DEFINE_CONSTANT cNORMAL   1
+//#DEFINE_CONSTANT cSUBJECT  2
+
+#DEFINE_CONSTANT MAX_SCHED_BUFFER		65000
+          
+// #CATEGORY "" 
+#DEFAULT_VOLATILE
+//#DEFAULT_NONVOLATILE
+#ENABLE_STACK_CHECKING
+#PRINT_TO_TRACE
+#ENABLE_TRACE
+/*
+#HELP_BEGIN
+   (add additional lines of help lines)
+#HELP_END
+*/
+
+/*******************************************************************************************
+  Include Libraries
+  (Uncomment and include additional librarys as needed)
+*******************************************************************************************/
+// #CRESTRON_LIBRARY ""
+// #USER_LIBRARY ""
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+  (Uncomment and declare inputs and outputs as needed)
+*******************************************************************************************/
+
+DIGITAL_INPUT Debug_Logic,
+              Initialize_Module,
+              RoomView_Online,
+              En_Prev_Day_From_Today,
+              En_Selected_Block_MoreInfo,
+              En_Selected_Block_AddAppt,
+              Check_Date,
+              Show_Workday_Schedule,
+              Get_User_Schedule,
+              Cancel_Get_User_Schedule,
+              Get_User_Schedule_Timeout,
+              MoreInfo_Data_Timeout,
+              Add_Appointment_Save,
+              Add_Appointment_Request_Timeout,
+              Add_Appointment_Dur_Minus,
+              Add_Appointment_Dur_Plus,
+              Prev_Day,
+              Next_Day,
+              Time_Format;
+ 
+ANALOG_INPUT Column_Width,
+             Privacy_Level,
+             Selected_Block,
+             Current_Page,
+             Field_Qty,
+             Date_Format;
+              
+STRING_INPUT Default_Organizer$[MAX_ORGANIZER_LEN],
+						 Add_Appt_Subject$[MAX_SUBJECT_LEN];
+  
+BUFFER_INPUT From_Workday_Mod_DataOut$[MAX_SCHED_BUFFER]; 
+
+DIGITAL_OUTPUT Initialize_Module_Busy_FB,
+               Calendar_Updated,
+               Selected_Block_Show_MoreInfo,
+               Selected_Block_Show_AddAppt,
+               On_Workday,
+               Force_Workday_Return,
+               Need_Workday_Schedule_Update;
+                
+ANALOG_OUTPUT User_Schedule_Request_Mode,
+							Work_Schedule_Request_Mode,
+							More_Info_Request_Mode,
+							Add_Appt_Request_Mode;
+ 
+STRING_OUTPUT To_RV_ScheduleQuery$,
+							To_RV_CreateMeeting$,
+              Schedule_Label$,
+              Selected_Block_MeetingID$,
+              Selected_Block_Organizer$,
+              Selected_Block_Subject$,
+              Selected_Block_Start_Date$,
+              Selected_Block_Start_Time$,
+              Selected_Block_End_Date$,
+              Selected_Block_End_Time$,
+              Meeting_Required_Attendees$,
+              Meeting_Optional_Attendees$,
+              Add_Appointment_Start_Date$,
+              Add_Appointment_Start_Time$,
+              Add_Appointment_Dur$; 
+
+
+// *** Array Defs ***
+
+ANALOG_OUTPUT Time_Block_Mode[MAX_TIME_BLOCKS];
+              
+STRING_OUTPUT Time_Block_Text$[MAX_TIME_BLOCKS];
+
+
+/*******************************************************************************************
+  Structure Definitions
+  (Uncomment and define structure definitions as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: struct.myString = "";
+*******************************************************************************************/
+STRUCTURE EventData
+{
+  string MeetingID[150];
+  string Organizer[MAX_NAME_LEN];
+  string Subject[MAX_SUBJECT_LEN];
+  string StartDate[10];
+  string StartTime[8];
+  string EndDate[10];
+  string EndTime[8];
+  integer StartBlock;
+  integer EndBlock;
+  integer IsPrivate;
+};
+
+EventData DayEvent[MAX_TIME_BLOCKS];
+EventData WorkEvent[MAX_TIME_BLOCKS];
+
+
+/*******************************************************************************************
+  Global Variables
+  (Uncomment and declare global variables as needed)
+  Note:  Be sure to initialize all declared STRING variables as needed
+         For example, in Function Main: myString = "";
+*******************************************************************************************/
+INTEGER g_bRXOK1,
+        g_bOnWorkday;
+
+STRING g_sRXData1[MAX_SCHED_BUFFER];
+
+STRING g_sMonth[12][10],
+       g_sTodayDate[10];
+
+
+// *** Request Data ***
+
+STRING g_sReqStartDate[10];
+
+INTEGER g_iReqMonth,
+        g_iReqDay,
+        g_iReqYear;
+
+// *** Current Schedule Variables
+
+STRING g_sScheduleLabel[25];
+
+INTEGER g_iDaysInMonth;
+
+INTEGER g_iReqStartDate;
+
+INTEGER g_iBlockEventIndex[MAX_TIME_BLOCKS];
+
+INTEGER g_iTodayMonth,
+        g_iTodayDay,
+        g_iTodayYear;
+
+// ***
+
+
+STRING g_sUserRequestID[40],
+			 g_sAttendeesRequestID[40],
+			 g_sCreateDayMeetingRequestID[40],
+			 g_sCreateWorkMeetingRequestID[40];
+
+INTEGER g_iStoredDayCount,
+				g_iStoredWorkCount;
+
+STRING g_sAddApptStartDate[10],
+			 g_sAddApptStartTime[5];
+			 
+INTEGER g_iAddApptStartBlock,
+				g_iAddApptEndBlock,
+				g_iAddApptDurBlocks,
+				g_iAddApptMaxDurBlocks;
+
+STRING g_sCreateDayMeetingStartDate[10];
+
+/*******************************************************************************************
+  Functions
+  (Add any additional functions here)
+  Note:  Functions must be physically placed before the location in
+         the code that calls them.
+*******************************************************************************************/
+
+Function CheckDate()
+{  
+  g_iTodayMonth = getmonthnum(); 
+  g_iTodayDay = getdatenum();  
+  g_iTodayYear = getyearnum();
+  
+  g_sTodayDate = date(3);
+  g_sTodayDate = left(g_sTodayDate, 4) + "-" + mid(g_sTodayDate, 6, 2) + "-" + right(g_sTodayDate, 2);
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: ClearCalendar()
+//
+// Parameters: StartBlock, EndBlock
+//
+// Return Value: <none>
+//
+// Description: Clears the calendar data between two times.
+//
+//
+/////////////////////////////////////////////////////////////////////
+
+Function ClearCalendar(integer iStartBlock, integer iEndBlock)
+{
+	integer i;
+	
+	if (Debug_Logic)
+	{
+		print ("\n** ClearCalendar **\n");
+		print ("  StartBlock:%u\n", iStartBlock);
+		print ("  EndBlock:%u\n", iEndBlock);
+	}
+	
+	for (i = iStartBlock to iEndBlock)
+	{
+		g_iBlockEventIndex[i] = 0;
+		
+		Time_Block_Mode[i] = BLOCK_MODE_NONE;
+		Time_Block_Text$[i] = "";
+	}
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: DateToInteger()
+//
+// Parameters: Data (date in string format from RV)
+//
+// Return Value: Date
+//
+// Description: Converts a string date value into an integer.
+//
+//
+/////////////////////////////////////////////////////////////////////
+
+Integer_Function DateToInteger(string Data)
+{
+  integer iMonth, iDay, iYear;
+  integer iDateValue;
+  
+  if (Debug_Logic)
+   print ("DateToInteger. Date:%s\n", Data);
+  
+  iMonth = atoi(mid(Data,6,2)) * 100;
+  iDay = atoi(right(Data,2));
+  iYear = atoi(left(Data, 4));
+  
+  iDateValue = iMonth + iDay + iYear;
+  
+  if (Debug_Logic)
+   print (" iDateValue:%u\n", iDateValue);
+  
+  return(iDateValue);
+}
+
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: TimeToInteger()
+//
+// Parameters: Time (time in string format from RV)
+//
+// Return Value: Time
+//
+// Description: Converts a string time value into an integer.
+//
+//
+/////////////////////////////////////////////////////////////////////
+
+Integer_Function TimeToInteger(string sData, integer iFormat)
+{
+	integer iTimeValue,
+    			iTimeH,
+    			iTimeM;
+    
+	// Format 1 = Time as Hours & Minutes (18:00 = 1800)
+  // Format 2 = Time as Minutes (18:00 = 1080)
+    
+  if (Debug_Logic)
+  {
+   	print ("\n** TimeToInteger **\n");
+    print ("  Format:%u\n", iFormat);
+    print ("  Data:%s\n", sData);
+  }
+    
+  iTimeValue = 0;
+    
+  if (iFormat = 1)
+  {
+  	iTimeH = atoi(left(sData, 2)) * 100;
+  	iTimeM = atoi(mid(sData, 4, 2));
+    iTimeValue = iTimeH + iTimeM;
+  }
+  else if (iFormat = 2)
+  {
+    iTimeH = atoi(left(sData, 2)) * 60;
+    iTimeM = atoi(mid(sData, 4, 2));
+    iTimeValue = iTimeH + iTimeM;    	
+  }
+    
+  if (Debug_Logic)
+  {
+    print ("  iTimeValue:%u\n", iTimeValue);
+  }
+    
+  return (iTimeValue);
+}
+
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: DaysInMonth()
+//
+// Parameters: Month, Year
+//
+// Return Value: Days in Month
+//
+// Description: Returns the days for a given month.
+//
+//
+/////////////////////////////////////////////////////////////////////
+
+Integer_Function DaysInMonth(integer iMonth, integer iYear)
+{
+  integer iDays;
+  
+  iDays = 0;
+  
+  if (Debug_Logic)
+  {
+  	trace ("\n** DaysInMonth **\n");
+  	trace ("  Month:%u\n", iMonth);
+  	trace ("  Year:%u\n", iYear);
+  }
+  
+  cswitch (iMonth)
+  {
+    case(1): //january
+    {
+      iDays = 31;
+      break;
+    }
+    case(2): //february
+    {
+      if (iYear mod 4 = 0)
+      {
+        iDays = 29;
+        break;
+      }
+      else
+      {
+        iDays = 28;
+        break;      
+      }
+    }
+    case(3): //march
+    {
+      iDays = 31;
+      break;
+    }
+    case(4): //april
+    {
+      iDays = 30;
+      break;
+    }
+    case(5): //may
+    {
+      iDays = 31;
+      break;
+    }
+    case(6): //june
+    {
+      iDays = 30;
+      break;
+    }
+    case(7): //july
+    {
+      iDays = 31;
+      break;
+    }
+    case(8): //august
+    {
+      iDays = 31;
+      break;
+    }
+    case(9): //september
+    {
+      iDays = 30;
+      break;
+    }
+    case(10): //october
+    {
+      iDays = 31;
+      break;
+    }
+    case(11): //november
+    {
+      iDays = 30;
+      break;
+    }
+    case(12): //december
+    {
+      iDays = 31;
+      break;
+    }
+  }
+  
+  if (Debug_Logic)
+  {
+  	trace ("  Days:%u\n", iDays);
+  }
+  
+  return (iDays);  
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: NextDayDate()
+//
+// Parameters: <none>
+//
+// Return Value: <none>
+//
+// Description: xxxx.
+//
+//
+/////////////////////////////////////////////////////////////////////
+String_Function NextDayDate(string sStartDate, string sDays)
+{
+	integer iStartMonth,
+					iStartDay,
+					iStartYear;
+					
+	integer iNextMonth,
+					iNextDay,
+					iNextYear;
+	
+	integer iDaysInMonth,
+					iDays;
+	
+	string sNextDayDate[10];
+	
+	if (Debug_Logic)
+	{
+		trace ("\n** NextDayDate **\n");
+		trace ("  StartDate:%s\n", sStartDate);
+		trace ("  Days:%s\n", sDays);
+	}
+	
+	// Convert starting date items to integers.
+	iStartMonth = atoi(mid(sStartDate, 6, 2));
+	iStartDay = atoi(right(sStartDate, 2));
+	iStartYear = atoi(left(sStartDate, 4));
+	iDaysInMonth = DaysInMonth(iStartMonth, iStartYear);
+	
+	iDays = atoi(sDays);
+	
+	if (Debug_Logic)
+	{
+		trace ("  StartMonth:%u\n", iStartMonth);
+		trace ("  StartDay:%u\n", iStartDay);
+		trace ("  StartYear:%u\n", iStartYear);
+		trace ("  DaysInMonth:%u\n", iDaysInMonth);
+		trace ("  Days:%u\n", iDays);
+	}
+	
+	
+	// Goto next day.
+	
+	// Days left in month?
+	if (iStartDay + iDays <= iDaysInMonth)
+	{
+		// Yes, days left. Goto next day.
+		
+		if (Debug_Logic)
+		{
+			trace ("  Days left in month.\n");
+		}
+		
+		iNextMonth = iStartMonth;
+		iNextDay = iStartDay + iDays;
+		iNextYear = iStartYear;
+	}
+	else
+	{
+		// No days left in month.
+		
+		if (Debug_Logic)
+		{
+			trace ("  No days left in month.\n");
+		}
+		
+		// Last month of year?
+		if (iStartMonth = 12)
+		{
+			// Yes, last month of year. Goto next year.
+			iNextMonth = 1;
+			iNextDay = (iStartDay + iDays) - iDaysInMonth;
+			iNextYear = iStartYear + 1;
+		}
+		else
+		{
+			// Not the last month of the year. Goto next month.
+			iNextMonth = iStartMonth + 1;
+			iNextDay = (iStartDay + iDays) - iDaysInMonth;
+			iNextYear = iStartYear;
+		}
+	}
+	
+	// Build return string.
+	sNextDayDate = itoa(iNextYear);
+	
+	if (iNextMonth < 10)
+	{
+		sNextDayDate = sNextDayDate + "-" + "0" + itoa(iNextMonth);
+	}
+	else
+	{
+		sNextDayDate = sNextDayDate + "-" + itoa(iNextMonth);
+	}
+	
+	if (iNextDay < 10)
+	{
+		sNextDayDate = sNextDayDate + "-" + "0" + itoa(iNextDay);
+	}
+	else
+	{
+		sNextDayDate = sNextDayDate + "-" + itoa(iNextDay);
+	}
+	
+	if (Debug_Logic)
+	{
+		trace ("  NextDayDate:%s\n", sNextDayDate);
+	}
+	
+	return (sNextDayDate);
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: FormatDate()
+//
+// Parameters: Data, Format
+//
+// Return Value: Formatted date
+//
+// Description: Returns formatted date from UTC Date.
+//
+//
+/////////////////////////////////////////////////////////////////////
+
+String_Function FormatDate(string sData, integer iFormat)
+{
+  string sLocalCopy[10], sDate[10];
+  integer iMonth;
+  string  sYear[4], sMonth[2], sMonthName[9], sDay[2];
+  
+  iMonth = atoi(mid(sData, 6, 2)); 
+  
+  sYear = left(sData, 4);
+  sMonth = mid(sData, 6, 2);
+  sMonthName = g_sMonth[iMonth];
+  sDay = right(sData, 2);
+  
+  iFormat = iFormat + 2*(Date_Format);
+  
+  if (Debug_Logic)
+  {
+  	print ("\n** FormatDate **\n");
+  	print ("  Data:%s\n", sData);
+  	print ("  Format:%u\n", iFormat);
+  }
+
+  
+  if (iFormat = 1) //format = "FullMonth DD, YYYY"
+  {
+    sDate = sMonthName + " " + sDay + ", " + sYear;
+  }
+  else if (iFormat = 2) //format = "MM/DD/YYYY"
+  {
+    sDate = sMonth + "/" + sDay + "/" + sYear;
+  }
+  
+  else if (iFormat = 3) //format = "DD Full Month YYYY"
+  {
+    sDate = sDay + " " + sMonthName + " " + sYear;
+  }
+  else if (iFormat = 4) //format = "DD/MM/YYYY"
+  {
+    sDate = sDay + "/" + sMonth + "/" + sYear;
+  }
+  
+  else if (iFormat = 5) //format = "YYYY, Full Month DD"
+  {
+    sDate = sYear + ", " + sMonthName + " " + sDay;
+  }
+  else if (iFormat = 6) //format = "YYYY/MM/DD"
+  {
+    sDate = sYear + "/" + sMonth + "/" + sDay;
+  }
+  
+  if (Debug_Logic)
+  {
+  	print ("  Formatted Date:%s\n", sDate);
+  }
+  
+  return (sDate);
+}
+
+
+String_Function FormatDateReq(integer Mode)
+{
+  string sLocalDate[10], sDate[10], sMonth[2], sDay[2];
+  
+  if (Debug_Logic)
+   print ("FormatDateReq. Mode:%u\n", Mode);
+  
+  switch (Mode)
+  {
+    case(1): //use local processor date
+    {
+      if (Debug_Logic)
+       print (" Using Local Processor Date\n");
+      
+      sLocalDate = date(3);
+      sDate = left(sLocalDate, 4) + "-" + mid(sLocalDate, 6, 2) + "-" +
+       right(sLocalDate, 2);
+    }
+    case(2): //use the integer variables
+    {
+      if (Debug_Logic)
+       print (" Using Integer Variables\n");
+      
+      if (g_iReqMonth < 10)
+       sMonth = "0" + itoa(g_iReqMonth);
+      else
+       sMonth = itoa(g_iReqMonth);
+       
+      if (g_iReqDay < 10)
+       sDay = "0" + itoa(g_iReqDay);
+      else
+       sDay = itoa(g_iReqDay);
+      
+      sDate = itoa(g_iReqYear) + "-" + sMonth + "-" + sDay;
+    }
+  }
+  
+  if (Debug_Logic)
+   print ("Date:%s\n", sDate);
+  
+  return (sDate);
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: IToLA()
+//
+// Parameters: Number as Integer (2 digit only)
+//
+// Return Value: Number as String
+//
+// Description: Converts a 2-digit integer to string with leading zeros
+//
+//
+/////////////////////////////////////////////////////////////////////
+String_Function IToLA(integer iNumber)
+{
+	string sNumber[2];
+	
+	if (iNumber < 10)
+	{
+		sNumber = "0" + itoa(iNumber);
+	}
+	else
+	{
+		sNumber = itoa(iNumber);
+	}
+	
+	return (sNumber);
+}
+
+STRING_FUNCTION FormatTime(string sData)
+{
+  integer iHour, iMinute;
+  string sHour[2], sMinute[2], sAMPM[2];
+  string sTime[8];
+  
+  iHour = atoi(left(sData, 2));
+  iMinute = atoi(right(sData, 2));
+	
+  //Regular or Army?
+  if (Time_Format)
+  { //Army
+   sHour = ItoLA(iHour);
+   sAMPM = "";
+  }
+  else
+  { //Regular
+    //Set Hour
+    sHour = ItoA(iHour mod 12);
+    if (iHour = 0 || iHour = 12)
+      sHour = "12";
+      
+    // Set AM/PM
+	  if (iHour < 12)
+    {
+      sAMPM = "AM";
+     }
+    else
+    {
+      sAMPM = "PM";
+    }	
+  }
+  
+  //Set Minute
+  sMinute = ItoLA(iMinute); 
+  	      
+	sTime = sHour + ":" + sMinute + " " + sAMPM;
+    
+  return (sTime);   
+}
+
+Function WrapBlockText(string sText, integer iStartBlock, integer iEndBlock)
+{
+	integer i,
+					iColumnWidth,
+					iSpacePos,
+					iLastSpacePos,
+					iStartPos,
+					bFindSpace;
+	
+	string sTextChunk[255];
+	
+	if (Debug_Logic)
+	{
+		print ("\n** WrapBlockText **\n");
+		print ("  TextLen:%u\n", len(sText));
+		print ("  StartBlock:%u\n", iStartBlock);
+		print ("  EndBlock:%u\n", iEndBlock);
+	}
+	
+	iColumnWidth = Column_Width;
+	
+	// Wrap the text down the blocks
+	for (i = iStartBlock to iEndBlock)
+	{
+		
+		// Still need to wrap?
+		if (len(sText) > iColumnWidth)
+		{
+			// Yes, still need to wrap text.
+			
+			// Look at a chunk of text based on column width
+			sTextChunk = left(sText, iColumnWidth);
+			
+			// Does the chunk contain any spaces?
+			if (find(" ", sTextChunk))
+			{
+				bFindSpace = TRUE;
+				iStartPos = 1;
+				
+				// Yes, found spaces. Find the last one.
+				do
+				{
+					iSpacePos = find(" ", sTextChunk, iStartPos);
+						
+					if (Debug_Logic)
+					{
+						print ("  iSpacePos:%u\n", iSpacePos);
+					}
+						
+					if (iSpacePos > 0)
+					{
+						// Found a space.
+							
+						iLastSpacePos = iSpacePos;
+							
+						// Can we look beyound this spot?
+						if (iSpacePos < iColumnWidth)
+						{
+							// Yes, there are still chars left
+							iStartPos = iSpacePos + 1;					
+						}
+						else
+						{
+							// The space is at the last char
+							bFindSpace = FALSE;
+						}
+					}
+					else
+					{
+						// Did not find a space.
+							
+						bFindSpace = FALSE;
+					}
+					
+				} until (!bFindSpace);
+				
+				// Remove all text including the last space.
+				sTextChunk = removebylength(iLastSpacePos, sText);
+			}
+			else
+			{
+				// Did not find any spaces.
+			}
+		}
+		else
+		{
+			// Do not need to wrap text.
+			if (len(sText))
+			{
+				sTextChunk = removebylength(len(sText), sText);
+			}
+			else
+			{
+				sTextChunk = "";
+			}
+		}
+		
+		if (Debug_Logic)
+		{
+			print ("  Block:%u\n", i);
+			print ("  TextChunk:%s\n", sTextChunk);
+		}
+		
+		Time_Block_Text$[i] = sTextChunk;			
+						
+	}
+}
+
+
+Function UpdateCalendar(integer iType)
+{
+  integer i,
+  				j,
+  				bValidEvent,
+  				bPrivateEvent,
+  				bPrivateBlock,
+  				bNeedTextWrap,
+  				iStartBlock,
+  				iEndBlock,
+  				iStartIndex,
+  				iEndIndex,
+  				iEventCount,
+  				iSpan,
+  				iPreviousEndBlock;
+  				
+  string sEventOrganizer[MAX_ORGANIZER_LEN],
+  			 sEventSubject[MAX_SUBJECT_LEN],
+  			 sBlockText[500];
+  
+  if (Debug_Logic)
+  {
+    print ("\n** UpdateCalendar **\n");
+    print ("  Type:%u\n", iType);
+  }
+  
+  if (iType = TYPE_DAY)
+  {
+  	iEventCount = g_iStoredDayCount;	
+	}
+	else if (iType = TYPE_WORK)
+	{
+		iEventCount = g_iStoredWorkCount;
+	}
+	
+	iPreviousEndBlock = 0;
+	
+	if (Debug_Logic)
+	{
+		print ("  EventCount:%u\n", iEventCount);
+	}
+	
+	// Any events?
+	if (iEventCount > 0)
+	{
+	
+		// Loop through each event and set output
+	  for (i = 1 to iEventCount)
+	  {
+			iStartBlock = 0;
+	    iEndBlock = 0;
+	    bPrivateEvent = FALSE;
+			bValidEvent = FALSE;
+			bNeedTextWrap = FALSE;
+			bPrivateBlock = FALSE;
+			
+	    if (iType = TYPE_DAY)
+	    {
+        sEventOrganizer = DayEvent[i].Organizer;
+        sEventSubject = DayEvent[i].Subject;
+				
+				iStartBlock = DayEvent[i].StartBlock;
+				iEndBlock = DayEvent[i].EndBlock;
+			
+				bPrivateEvent = DayEvent[i].IsPrivate;
+			}
+			else if (iType = TYPE_WORK)
+			{
+	    	sEventOrganizer = WorkEvent[i].Organizer;
+	    	sEventSubject = WorkEvent[i].Subject;
+				
+				iStartBlock = WorkEvent[i].StartBlock;
+				iEndBlock = WorkEvent[i].EndBlock;
+			
+				bPrivateEvent = WorkEvent[i].IsPrivate;			
+			}
+			
+			// Replace "" with Unknown
+			if (len(sEventOrganizer) = 0)
+			 sEventOrganizer = "Unknown";
+					
+	  	// Calculate the span.
+			if (iStartBlock = iEndBlock)
+			{
+				iSpan = 1;
+			}
+				
+			else
+			{
+				iSpan = (iEndBlock - iStartBlock) + 1;				
+			}
+				
+			if (Debug_Logic)
+			{
+				print ("  Event:%u\n", i);
+				print ("  Span:%u\n", iSpan);
+			}
+				
+			// Clear calendar?
+			if (iStartBlock > iPreviousEndBlock + 1)
+			{
+				if (iPreviousEndBlock = 0)
+				{
+					// Previous end block = 0, so this is a fresh update.
+						
+					// Clear from beginning to now.
+					call ClearCalendar(1, iStartBlock - 1);
+				}
+				else
+				{
+					// Previous end block <> 0, so we have a previous event on calendar.
+						
+					// Clear from previous end block to now.
+					call ClearCalendar(iPreviousEndBlock + 1, iStartBlock - 1);
+				}
+			}	
+				
+			// Set block text
+			if (Privacy_Level = 0)
+			{
+				// Public room. Check individual meeting privacy.
+				
+				if (Debug_Logic)
+				{
+					print ("  Public room.\n");
+				}
+				
+				if (bPrivateEvent)
+				{
+					if (Debug_Logic)
+					{
+						print ("  Private event.\n");
+					}
+					
+					sBlockText = "Private";
+					bPrivateBlock = TRUE;		
+				}
+				else
+				{		
+					if (Debug_Logic)
+					{
+						print ("  Public event.\n");
+					}
+					
+					sBlockText =  "[" + sEventOrganizer + "] " + sEventSubject;
+				}
+			}
+			else if (Privacy_Level = 1)
+			{
+				// Semi-Private room. Hide subject.
+				
+				if (Debug_Logic)
+				{
+					print ("  Semi-Private room.\n");
+				}
+					
+				sBlockText = "[" + sEventOrganizer + "] " + "Private";
+				bPrivateBlock = TRUE;				
+			}
+			else if (Privacy_Level = 2)
+			{
+				// Private room. Hide everything.
+
+				if (Debug_Logic)
+				{
+					print ("  Fully-Private room.\n");
+				}
+									
+				sBlockText = "Private";
+				bPrivateBlock = TRUE;
+			}
+				
+				
+			// ** Set actual block modes **
+				
+			iPreviousEndBlock = iEndBlock;
+				
+			iStartIndex = iStartBlock;
+			iEndIndex = iEndBlock;
+				
+	    if (Debug_Logic)
+	    {
+	    	print ("  EventIndex:%u\n", i);
+	    	print ("  EventStartBlock:%u\n", iStartBlock);
+				print ("  EventEndBlock:%u\n", iEndBlock);
+				print ("  EventOrganizer:%s\n", sEventOrganizer);
+				print ("  EventSubject:%s\n", sEventSubject);
+				print ("  PrivateBlock:%u\n", bPrivateBlock); 
+	    }
+				
+				
+	
+			if (iSpan = 1)
+			{
+				if (!bPrivateBlock)
+				{
+					Time_Block_Mode[iStartIndex] = BLOCK_MODE_UP_DN_MORE;
+					g_iBlockEventIndex[iStartIndex] = i;
+				}
+				else
+				{
+					Time_Block_Mode[iStartIndex] = BLOCK_MODE_UP_DN_PRIV;
+					g_iBlockEventIndex[iStartIndex] = 0;					
+				}
+						
+				// Need to crop block text?
+				if (len(sBlockText) > Column_Width)
+				{
+					sBlockText = left(sBlockText, Column_Width);	
+				}
+						
+				Time_Block_Text$[iStartIndex] = sBlockText;			
+			}
+			else if (iSpan = 2)
+			{
+				// Need to wrap text?
+				if (len(sBlockText) > Column_Width)
+				{
+				  bNeedTextWrap = TRUE;
+				}
+	
+				// Set start.
+				
+				if (!bPrivateBlock)
+				{
+					Time_Block_mode[iStartIndex] = BLOCK_MODE_UP_MORE;
+					g_iBlockEventIndex[iStartIndex] = i;
+				}
+				else
+				{
+					Time_Block_mode[iStartIndex] = BLOCK_MODE_UP_PRIV;
+					g_iBlockEventIndex[iStartIndex] = 0;				
+				}
+					
+				// Set end.
+				Time_Block_Mode[iEndIndex] = BLOCK_MODE_DN;
+				g_iBlockEventIndex[iEndIndex] = i;
+						
+				// Need to wrap text?
+				if (bNeedTextWrap)
+				{
+					call WrapBlockText(sBlockText, iStartIndex, iEndIndex);
+				}
+				else
+				{
+					Time_Block_Text$[iStartIndex] = sBlockText;
+					Time_Block_Text$[iEndIndex] = "";
+				}			
+			}
+			else
+			{
+				// Need to wrap text?
+				if (len(sBlockText) > Column_Width)
+				{
+				  bNeedTextWrap = TRUE;
+				}
+					
+				// Set start.
+				
+				if (!bPrivateBlock)
+				{
+					Time_Block_Mode[iStartIndex] = BLOCK_MODE_UP_MORE;
+					g_iBlockEventIndex[iStartIndex] = i;			  
+				}
+				else
+				{
+					Time_Block_Mode[iStartIndex] = BLOCK_MODE_UP_PRIV;
+					g_iBlockEventIndex[iStartIndex] = 0;				
+				}
+				  
+				// Set in-between.
+				if (iSpan > 2)
+				{
+					for (j = iStartIndex + 1 to iEndIndex - 1)
+					{
+						Time_Block_Mode[j] = BLOCK_MODE_MID;
+						g_iBlockEventIndex[j] = i;
+							
+						if (!bNeedTextWrap)
+						{
+							Time_Block_Text$[j] = "";							
+						}			
+					}
+				}
+						
+				// Set end.
+				Time_Block_Mode[iEndIndex] = BLOCK_MODE_DN;
+				g_iBlockEventIndex[iEndIndex] = i;
+						
+				// Need to wrap text?
+				if (bNeedTextWrap)
+				{
+					call WrapBlockText(sBlockText, iStartIndex, iEndIndex);
+				}
+				else
+				{
+					Time_Block_Text$[iStartIndex] = sBlockText;
+					Time_Block_Text$[iEndIndex] = "";			
+				} 		
+			}
+			
+	  }	// End for loop
+	}
+  
+  // Clear end of calendar?
+  if (iPreviousEndBlock = 0)
+  {
+  	// If PreviousEndBlock = 0, no events were found within UI.
+  	// Clear entire calendar.
+  	
+  	call ClearCalendar(1, MAX_TIME_BLOCKS);
+  }
+  else 
+  {
+  	// PreviousEndBlock has value, so look at last end block.
+  	
+  	if (iEndIndex < MAX_TIME_BLOCKS)
+  	{  	
+  		call ClearCalendar(iEndIndex + 1, MAX_TIME_BLOCKS);
+  	}
+  }
+  
+	Schedule_Label$ = FormatDate(g_sReqStartDate, 1);
+	g_sScheduleLabel = FormatDate(g_sReqStartDate, 1);
+	
+	Calendar_Updated = TRUE;
+	Calendar_Updated = FALSE;
+}
+
+String_Function CalendarBlock(integer iType, string sStartDate, string sStartTime, string sEndDate, string sEndTime)
+{
+	integer	i,
+					bNeedCalcStartBlock,
+					bNeedCalcEndBlock,
+					iStartBlock,
+					iEndBlock,
+					iStartTimeMinutes,
+					iEndTimeMinutes,
+					iBlockStartTimeMinutes,
+					iBlockEndTimeMinutes;
+					
+	string sDate[10],
+				 sReturnData[5];
+	
+	if (Debug_Logic)
+	{
+		print ("\n** CalendarBlock **\n");
+		print ("  Type:%u\n", iType);
+		print ("  StartDate:%s\n", sStartDate);
+		print ("  StartTime:%s\n", sStartTime);
+		print ("  EndDate:%s\n", sEndDate);
+		print ("  EndTime:%s\n", sEndTime);
+	}
+	
+	iStartBlock = 0;
+	iEndBlock = 0;
+	bNeedCalcStartBlock = FALSE;
+	bNeedCalcEndBlock = FALSE;
+	
+	if (iType = TYPE_DAY)
+	{
+		sDate = g_sReqStartDate;
+	}
+	else if (iType = TYPE_WORK)
+	{
+		sDate = g_sTodayDate;
+	}
+	
+	// Determine if event falls within UI
+	if (sDate = sStartDate && sDate = sEndDate)
+	{
+		// Event starts and ends on the date
+		
+		if (Debug_Logic)
+		{
+			print ("  Event starts and ends on date\n");
+		}
+		
+		bNeedCalcStartBlock = TRUE;
+		bNeedCalcEndBlock = TRUE;			
+	}
+	else if (sDate > sStartDate && sDate = sEndDate)
+	{
+		// Event starts prior to the date and ends on the date
+
+		if (Debug_Logic)
+		{
+			print ("  Event starts prior to date and ends on date\n");
+		}
+				
+		iStartBlock = 1;
+		
+		bNeedCalcEndBlock = TRUE;
+	}
+	else if (sDate = sStartDate && sDate < sEndDate)
+	{
+		// Event starts on the date, but ends after the date
+
+		if (Debug_Logic)
+		{
+			print ("  Event starts on date and ends after date\n");
+		}
+				
+		iEndBlock = 48;
+		
+		bNeedCalcStartBlock = TRUE;		
+	}
+	else if (sDate > sStartDate && sDate < sEndDate)
+	{
+		// Event starts prior to the date and ends after the date
+
+		if (Debug_Logic)
+		{
+			print ("  Event starts prior to date and ends after date\n");
+		}
+				
+		iStartBlock = 1;
+		iEndBlock = 48;
+	}
+	
+	// Need to calc start block?
+	if (bNeedCalcStartBlock)
+	{
+		iStartTimeMinutes = TimeToInteger(sStartTime, 2);
+		
+		// Find the block
+		for (i = 1 to 48)
+		{
+			iBlockStartTimeMinutes = (i * 30) - 30;
+			iBlockEndTimeMinutes = i * 30;
+					
+			if (iStartTimeMinutes >= iBlockStartTimeMinutes &&
+					 iStartTimeMinutes < iBlockEndTimeMinutes)
+			{
+				iStartBlock = i;
+				break;
+			}
+		}		
+	}
+
+	// Need to calc end block?
+	if (bNeedCalcEndBlock)
+	{
+		iEndTimeMinutes = TimeToInteger(sEndTime, 2);
+				
+		// Find the block
+		for (i = 1 to 48)
+		{
+			iBlockStartTimeMinutes = (i * 30) - 30;
+			iBlockEndTimeMinutes = i * 30;
+					
+			if (iEndTimeMinutes > iBlockStartTimeMinutes &&
+					 iEndTimeMinutes <= iBlockEndTimeMinutes)
+			{
+				iEndBlock = i;
+				break;
+			}					
+		}
+	}	
+
+	if (Debug_Logic)
+	{
+		print ("  StartBlock:%u\n", iStartBlock);
+		print ("  EndBlock:%u\n", iEndBlock);
+	}
+	
+	sReturnData = itoa(iStartBlock) + "," + itoa(iEndBlock);
+	
+	return(sReturnData);
+}
+
+Function ProcessEventList(string sData)
+{
+  string sRemovedData[1000]; 
+
+  integer iCount,
+  				iStartBlock,
+  				iEndBlock, 
+  				bPrivate,
+  				bExchangePrivate;
+
+	string sMeetingID[MAX_MEETING_ID_LEN],
+       	 sStartDate[10],
+       	 sStartTime[8],
+         sEndDate[10],
+       	 sEndTime[8],
+         sOrganizer[MAX_NAME_LEN],
+         sSubject[MAX_TEMP_SUBJECT_LEN];
+  
+  				  				  
+  if (Debug_Logic)
+  {
+  	print ("\n** ProcessEventList **\n");
+  }
+  
+  Work_Schedule_Request_Mode = REQUEST_MODE_PROCESSING;
+  
+  iCount = 0;
+  
+  if (g_bOnWorkday)
+  {
+  	//Update the TP label  
+ 		Schedule_Label$ = "Updating schedule ...";
+ 		g_sScheduleLabel = "Updating schedule ...";
+  }
+  
+  do
+	{
+		sRemovedData = remove(">", sData);
+		
+		if (find("<Event>", sRemovedData))
+		{
+			sMeetingID = "";
+      sStartDate = "";
+      sStartTime = "";
+      sEndDate = "";
+      sEndTime = "";
+      sOrganizer = "";
+      sSubject = "";
+          
+      bPrivate = FALSE;
+      bExchangePrivate = FALSE;
+          
+      iStartBlock = 0;
+      iEndBlock = 0;
+		}
+		else if (find("</Event>", sRemovedData))
+		{
+			iCount = iCount + 1;
+		    		
+			WorkEvent[iCount].StartDate = sStartDate;
+		  WorkEvent[iCount].EndDate = sEndDate;
+			WorkEvent[iCount].StartTime = sStartTime;
+			WorkEvent[iCount].EndTime = sEndTime;
+		  WorkEvent[iCount].MeetingID = sMeetingID;
+		  WorkEvent[iCount].Organizer = sOrganizer;
+		  WorkEvent[iCount].Subject = sSubject;
+		  
+		  if (bPrivate || bExchangePrivate)
+		   WorkEvent[iCount].IsPrivate = TRUE;
+		  else
+		   WorkEvent[iCount].IsPrivate = FALSE;	    		
+		    		
+		  WorkEvent[iCount].StartBlock = iStartBlock;
+			WorkEvent[iCount].EndBlock = iEndBlock;		    	
+		}
+		else if (find("</MeetingID>", sRemovedData))
+		{
+		  sMeetingID = left(sRemovedData, len(sRemovedData) - 12);
+		}   
+		else if (find("</StartDate>", sRemovedData))
+		{    
+		  //remove the date
+			sStartDate = left(sRemovedData, len(sRemovedData) - 12);
+		}
+		else if (find("</StartTime>", sRemovedData))
+		{    
+		  //remove the date
+			sStartTime = left(sRemovedData, len(sRemovedData) - 12);
+		}
+		else if (find("</StartBlock>", sRemovedData))
+		{    
+		  //remove the date
+			iStartBlock = atoi(left(sRemovedData, len(sRemovedData) - 13));
+		}
+		else if (find("</EndDate>", sRemovedData))
+		{
+		  //remove the date
+			sEndDate = left(sRemovedData, len(sRemovedData) - 10);    
+		}
+		else if (find("</EndTime>", sRemovedData))
+		{
+		  //remove the date
+			sEndTime = left(sRemovedData, len(sRemovedData) - 10);    
+		}
+		else if (find("</EndBlock>", sRemovedData))
+		{    
+		  //remove the date
+			iEndBlock = atoi(left(sRemovedData, len(sRemovedData) - 11));
+		}
+		else if (find("</Organizer>", sRemovedData))
+		{
+			sOrganizer = left(sRemovedData, len(sRemovedData) - 12);
+			    
+		  if (sOrganizer = "Unknown Name" && len(Default_Organizer$) > 0)
+		  	sOrganizer = Default_Organizer$;
+		}
+		else if (find("</IsPrivate>", sRemovedData))
+		{
+			if (find("1", sRemovedData))
+		  	bPrivate = TRUE;
+		  else
+		    bPrivate = FALSE;
+		}
+		else if (find("</IsExchangePrivate>", sRemovedData))
+		{
+			if (find("1", sRemovedData))
+		  	bExchangePrivate = TRUE;
+		  else
+		    bExchangePrivate = FALSE;
+		}
+		else if (find("</Subject>", sRemovedData))
+		{
+			sSubject = left(sRemovedData, len(sRemovedData) - 10);
+		}		
+		
+	} until (len(sData) = 0);
+  
+  g_iStoredWorkCount = iCount;
+  
+  Work_Schedule_Request_Mode = REQUEST_MODE_IDLE;
+  
+  call CheckDate();
+  
+  // If on workday, update output.
+  if (g_bOnWorkday)
+  {
+  	if (Debug_Logic)
+  	{
+  		print ("  On workday.\n");
+  	}  	
+  	
+  	// Update display
+	 	call UpdateCalendar(TYPE_WORK);
+  }
+}
+
+Function ProcessScheduleResponse(string sData)
+{
+  string sRemovedData[1000],
+  			 sTemp[1000];
+  			 
+  integer iNode,
+  				iCount,
+  				iStartBlock,
+  				iEndBlock,
+  				bOKToStore, 
+  				bPrivate;
+
+	string sMeetingID[MAX_MEETING_ID_LEN],
+       	 sStartDate[10],
+       	 sStartTime[8],
+         sEndDate[10],
+       	 sEndTime[8],
+         sOrganizer[MAX_NAME_LEN],
+         sSubject[MAX_TEMP_SUBJECT_LEN];
+  
+  string sStartEndBlock[5],
+         sStartBlock[3],
+         sEndBlock[3];
+   
+  string sPrevEndDate[18],
+  			 sPrevEndTime[18]; 
+  
+  
+  if (Debug_Logic)
+  {
+  	print ("\n** ProcessScheduleResponse **\n");
+  }
+  
+  //Set vars
+  iNode = SCHED_NODE_ROOT;
+
+  //Only process data is schedule does not contain errors
+  if (!find("<Errors>", sData))
+  {	    
+	  iCount = 0;
+	  
+	  User_Schedule_Request_Mode = REQUEST_MODE_PROCESSING;
+	  
+	  sPrevEndDate = "";
+	  sPrevEndTime = "";
+	  
+	  //Update the TP label  
+ 		Schedule_Label$ = "Updating schedule ...";
+ 		g_sScheduleLabel = "Updating schedule ...";
+	  
+	  do
+	  {
+	  	sRemovedData = remove(">", sData);
+	  	
+		  if (iNode = SCHED_NODE_ROOT)
+		  {
+		    if (find("<Event>", sRemovedData))
+		    {
+		    	bOKToStore = FALSE;
+		    	
+		    	sMeetingID = "";
+       		sStartDate = "";
+       	  sStartTime = "";
+          sEndDate = "";
+       	  sEndTime = "";
+          sOrganizer = "";
+          sSubject = "";
+          
+          bPrivate = FALSE;
+          
+          iStartBlock = 0;
+          iEndBlock = 0;
+		    }
+		    else if (find("</Event>", sRemovedData))
+		    {		    	
+		    	// Calculate Start/End block
+			    sStartEndBlock = CalendarBlock(TYPE_DAY, sStartDate, sStartTime, sEndDate, sEndTime);
+
+			        
+			    sStartBlock = remove(",", sStartEndBlock);
+			    sStartBlock = left(sStartBlock, len(sStartBlock) - 1);
+			    sEndBlock = sStartEndBlock;		    	
+
+			    if (Debug_Logic)
+			    {
+			    	trace ("  g_sReqStartDate:%s.\n", g_sReqStartDate);
+			    	trace ("  sPrevEndDate:%s.\n", sPrevEndDate);
+			    	trace ("  sPrevEndTime:%s.\n", sPrevEndTime);
+			    	trace ("  sStartDate:%s.\n", sStartDate);
+			    	trace ("  sStartTime:%s.\n", sStartTime);
+			    	trace ("  sStartBlock:%s.\n", sStartBlock);
+			    	trace ("  sEndBlock:%s.\n", sEndBlock);  
+			    }
+
+          
+          // Make sure EventStartEndBlock <> 0
+			   	if (sStartBlock <> "0" && sEndBlock <> "0")
+			    {
+          
+			    	// Make sure event does not overlap previous event
+             
+            // Have prev end date?
+			    	if (len(sPrevEndDate) = 0)
+			    	{
+			    		// Do not have previous end date. Probably first event.
+
+			    		if (Debug_Logic)
+			    		{
+			    			trace ("  Do not have previous end date. OK to store.\n");  
+			    		}
+			    							    				
+			    		bOKToStore = TRUE;
+			    	}
+			    	else if (sPrevEndDate = g_sReqStartDate)
+			    	{
+			    		// Previous end date = g_sReqStartDate. See if new event overlaps previous.
+			    				
+			    		if (Debug_Logic)
+			    		{
+			    			trace ("  Previous end date = g_sReqStartDate. Need to check for overlap.\n");  
+			    		}
+			    				
+							if (sStartTime > sPrevEndTime)
+							{
+								// New event start time > previous start time.
+
+			    			if (Debug_Logic)
+			    			{
+			    				trace ("  New event start time > previous start time. OK to store.\n");  
+			    			}
+										
+								bOKToStore = TRUE;
+							}
+							else if (sStartTime = sPrevEndTime)
+							{
+								// New event start time = previous end time.
+										
+			    			if (Debug_Logic)
+			    			{
+			    				trace ("  New event start time = previous start time. OK to store.\n");  
+			    			}
+										
+								bOKToStore = TRUE;
+							}
+							else
+							{
+			    			if (Debug_Logic)
+			    			{
+			    				trace ("  Not OK to store.\n");  
+			    			}
+							}			    							    				
+			    	} 
+             
+            if (bOKToStore)
+			    	{
+		    			// No overlap. Store event.
+		    		
+		    			sPrevEndDate = sEndDate;
+		    			sPrevEndTime = sEndTime;
+		    		
+		    			iCount = iCount + 1;
+		    		
+			      	DayEvent[iCount].StartDate = sStartDate;
+		        	DayEvent[iCount].EndDate = sEndDate;
+			      	DayEvent[iCount].StartTime = sStartTime;
+			      	DayEvent[iCount].EndTime = sEndTime;
+		        	DayEvent[iCount].MeetingID = sMeetingID;
+		        	DayEvent[iCount].Organizer = sOrganizer;
+		        	DayEvent[iCount].Subject = sSubject;
+		        	DayEvent[iCount].IsPrivate = bPrivate;	    		
+		    		
+		    			DayEvent[iCount].StartBlock = atoi(sStartBlock);
+			      	DayEvent[iCount].EndBlock = atoi(sEndBlock);
+		    		}		    	
+		    	}
+		    }
+		    else if (find("</MeetingID>", sRemovedData))
+		    {
+		      sMeetingID = left(sRemovedData, len(sRemovedData) - 12);
+		    }   
+		    else if (find("</dtStart>", sRemovedData))
+		    {    
+		      //remove the date
+			    sStartDate = left(sRemovedData, 10);
+		      
+			    //remove the time
+		      sStartTime = mid(sRemovedData, 12, 5);    
+		    }
+			  else if (find("</dtEnd>", sRemovedData))
+			  {
+		      //remove the date
+			    sEndDate = left(sRemovedData, 10);
+		      
+			    //remove the time
+		      sEndTime = mid(sRemovedData, 12, 5);    
+			  }
+			  else if (find("</Organizer>", sRemovedData))
+			  {
+			    sOrganizer = left(sRemovedData, len(sRemovedData) - 12);
+			    
+		      if (sOrganizer = "Unknown Name" && len(Default_Organizer$) > 0)
+		       	sOrganizer = Default_Organizer$;
+			  }
+			  else if (find("</IsPrivate>", sRemovedData))
+			  {
+			    if (find("1", sRemovedData))
+		       	bPrivate = TRUE;
+		      else
+		       	bPrivate = FALSE;
+			  }
+			  else if (find("</IsExchangePrivate>", sRemovedData))
+			  {
+			    if (find("1", sRemovedData))
+		       	bPrivate = TRUE;
+		      else
+		       	bPrivate = FALSE;
+			  }
+			  else if (find("<Subject>", sRemovedData))
+			  {
+			    sSubject = "";
+		      
+		      iNode = SCHED_NODE_MEETING_SUBJECT;
+			  }
+		  }
+		  else if (iNode = SCHED_NODE_MEETING_SUBJECT)
+		  {
+		    if (find("</Subject>", sRemovedData))
+		    {		       
+				  sSubject = sSubject + left(sRemovedData, len(sRemovedData) - 10);
+		      
+		      if (len(sSubject) > 230)
+		       	sSubject = left(sSubject, 230);
+		      
+		      iNode = SCHED_NODE_ROOT;
+		    }
+		    else
+		    {
+		     	sSubject = sSubject + sRemovedData;
+		    }
+			}
+		  	
+	  } until (len(sData) = 0);
+	  
+	  //**End of schedule items
+	  
+  	g_iStoredDayCount = iCount;
+  		
+  	//Update the TP label  
+	 	Schedule_Label$ = FormatDate(g_sReqStartDate, 1);
+	 	g_sScheduleLabel = FormatDate(g_sReqStartDate, 1);
+	 		
+	 	// Update display
+	 	call UpdateCalendar(TYPE_DAY);
+	 	
+	}
+	else
+	{
+		//Errors, received.
+	  
+	  User_Schedule_Request_Mode = REQUEST_MODE_FAILURE;
+	  
+	  // Not on workday?
+	  if (!g_bOnWorkday)
+	  {
+	  	// Not on workday. Show message, then force workday return.
+	  	
+	  	Schedule_Label$ = "Schedule response error ...";
+	  	g_sScheduleLabel = "Schedule response error ...";
+	  	
+	  	wait(200)
+	  	{
+	  		Force_Workday_Return = TRUE;
+	  		Force_Workday_Return = FALSE;	  			  		
+	  	}
+	  }		
+	}
+	
+  User_Schedule_Request_Mode = REQUEST_MODE_IDLE;
+}
+
+
+Function GetUserSchedule()
+{
+  string sXMLData[2000];
+  
+  User_Schedule_Request_Mode = REQUEST_MODE_BUSY;
+
+  
+  //Update the TP label  
+	Schedule_Label$ = "Requesting schedule ...";
+	g_sScheduleLabel = "Requesting schedule ...";
+  
+  g_sUserRequestID = "UserSchedule" + itoa(gethseconds());
+  
+  sXMLData = 
+   "<RequestSchedule>" +
+    "<RequestID>" + g_sUserRequestID + "</RequestID>" +
+    "<Start>" + g_sReqStartDate + "T" + "00:00:00" + "</Start>" + 
+    "<HourSpan>24</HourSpan>" +
+    "<FieldList>" +
+     "<Field>MeetingID</Field>" +
+     "<Field>dtStart</Field>" +
+     "<Field>dtEnd</Field>" +
+     "<Field>Organizer</Field>" +
+     "<Field>Subject</Field>" +
+     "<Field>IsPrivate</Field>" +
+     "<Field>IsExchangePrivate</Field>" +
+    "</FieldList>" +
+   "</RequestSchedule>";
+   
+  do
+  {
+    if (len(sXMLData) > 240)
+     To_RV_ScheduleQuery$ = removebylength(240, sXMLData);
+    else
+     To_RV_ScheduleQuery$ = removebylength(len(sXMLData), sXMLData);
+      
+  } until (len(sXMLData) = 0);
+}
+
+
+
+Function GetMoreInfo(string sMeetingID)
+{
+  string sXMLData[1000];
+  
+  if (Debug_Logic)
+  {
+  	print ("\n** GetMoreInfo **\n");
+  }
+  
+  More_Info_Request_Mode = REQUEST_MODE_BUSY;
+  
+  g_sAttendeesRequestID = "UserInfo" + itoa(gethseconds());
+  
+  Meeting_Required_Attendees$ = "Requesting data ...";
+  Meeting_Optional_Attendees$ = "Requesting data ...";
+  
+  sXMLData = 
+   "<RequestSchedule>" +
+    "<RequestID>" + g_sAttendeesRequestID + "</RequestID>" +
+    "<MeetingID>" + sMeetingID + "</MeetingID>" +
+    "<FieldList>" +
+     "<Field>Attendees</Field>" +
+    "</FieldList>" +
+   "</RequestSchedule>";
+   
+   do
+   {
+     if (len(sXMLData) > 240)
+      To_RV_ScheduleQuery$ = removebylength(240, sXMLData);
+     else
+      To_RV_ScheduleQuery$ = removebylength(len(sXMLData), sXMLData);
+      
+   } until (len(sXMLData) = 0);
+   
+}
+
+Function ProcessMoreInfoResponse(string sData)
+{
+  string sRemoved[255],
+  			 sAttendees[5000];
+  
+  integer iNode,
+  				iCount;
+  
+  iNode = ATTEN_NODE_ROOT;
+  
+  More_Info_Request_Mode = REQUEST_MODE_PROCESSING;
+  
+  do
+  {
+    sRemoved = remove(">", sData);
+    
+    if (iNode = ATTEN_NODE_ROOT)
+    {
+      if (find("<Required>", sRemoved))
+      {
+        iNode = ATTEN_NODE_REQUIRED;
+        iCount = 0;
+        sAttendees = "";
+      }
+      else if (find("<Optional>", sRemoved))
+      {
+        iNode = ATTEN_NODE_OPTIONAL;
+        iCount = 0;
+        sAttendees = "";
+      }
+    }
+    else if (iNode = ATTEN_NODE_REQUIRED)
+    {
+      if (find("</Required>", sRemoved))
+      {
+        iNode = ATTEN_NODE_ROOT;
+        
+        if (iCount = 0)
+        {
+          Meeting_Required_Attendees$ = "";
+        }
+        else
+        {
+          // Check the length.
+          if (len(sAttendees) > 250)
+          {
+          	sAttendees = left(sAttendees, 250) + " ...";
+          }
+          
+          Meeting_Required_Attendees$ = sAttendees;        
+        }
+      }
+      else
+      {
+        if (find("</Attendee>", sRemoved))
+        {
+          // Ignore any attendee starting with "Conf Room"
+          if (!find("Conf Room", sRemoved))
+          {
+            // Count < 10?
+            if (iCount < 10)
+            {
+            	iCount = iCount + 1;
+            	
+            	if (iCount = 1)
+            	{
+            		sAttendees = left(sRemoved, len(sRemoved) - 11);
+            	}
+            	else
+            	{
+            		sAttendees = sAttendees + ", " + left(sRemoved, len(sRemoved) - 11);
+            	}
+            }
+            else
+            {
+            	sAttendees = sAttendees + " ...";
+            }
+          }
+        }
+      }
+    }
+    else if (iNode = ATTEN_NODE_OPTIONAL)
+    {
+      if (find("</Optional>", sRemoved))
+      {
+        iNode = ATTEN_NODE_ROOT;
+        
+        if (iCount = 0)
+        {
+          Meeting_Optional_Attendees$ = "";
+        }
+        else
+        {
+          // Check the length.
+          if (len(sAttendees) > 250)
+          {
+          	sAttendees = left(sAttendees, 250) + " ...";
+          }
+          
+          Meeting_Optional_Attendees$ = sAttendees;        
+        }
+      }
+      else
+      {
+        if (find("</Attendee>", sRemoved))
+        {
+          // Ignore any attendee starting with "Conf Room"
+          if (!find("Conf Room", sRemoved))
+          {
+            // Count < 10?
+            if (iCount < 10)
+            {
+            	iCount = iCount + 1;
+            	
+            	if (iCount = 1)
+            	{
+            		sAttendees = left(sRemoved, len(sRemoved) - 11);
+            	}
+            	else
+            	{
+            		sAttendees = sAttendees + ", " + left(sRemoved, len(sRemoved) - 11);
+            	}
+            }
+            else
+            {
+            	sAttendees = sAttendees + " ...";
+            }
+          }
+        }
+      }
+    }
+        
+  } until (len(sData) = 0);
+  
+  More_Info_Request_Mode = REQUEST_MODE_IDLE;
+}
+
+Function CreateMeeting(string sStartDate, string sStartTime, string sEndDate, string sEndTime, string sSubject)
+{
+	string sRequestID[40],
+				 sDTStart[20],
+				 sDTEnd[20],
+				 sXML[500];
+	
+	if (Debug_Logic)
+	{
+		print ("\n** CreateMeeting **\n");
+		print ("  StartDate:%s\n", sStartDate);
+		print ("  StartTime:%s\n", sStartTime);
+		print ("  EndDate:%s\n", sEndDate);
+		print ("  EndTime:%s\n", sEndTime);
+		print ("  Subject:%s\n", sSubject);
+	}
+	
+	Add_Appt_Request_Mode = REQUEST_MODE_BUSY;
+	
+	if (sStartDate = g_sTodayDate && sEndDate = g_sTodayDate)
+	{
+		g_sCreateWorkMeetingRequestID = "UserCreateWork" + itoa(gethseconds());
+		sRequestID = g_sCreateWorkMeetingRequestID;
+	}
+	else
+	{
+		g_sCreateDayMeetingRequestID = "UserCreateDay" + itoa(gethseconds());
+		g_sCreateDayMeetingStartDate = sStartDate;
+		sRequestID = g_sCreateDayMeetingRequestID;	
+	}
+	
+	sDTStart = sStartDate + "T" + sStartTime + ":00";
+	sDTEnd = sEndDate + "T" + sEndTime + ":00";
+	
+	
+	// Build XML.
+	sXML =
+		"<CreateSchedule>" +
+		"<RequestID>" + sRequestID + "</RequestID>" +
+			"<Event>" +
+				"<dtStart>" + sDTStart + "</dtStart>" +
+				"<dtEnd>" + sDTEnd + "</dtEnd>" +
+				"<Subject>" + sSubject + "</Subject>" +
+			"</Event>" +
+		"</CreateSchedule>";
+		
+	// Send request out.
+	do
+	{
+		
+		if (len(sXML) > 240)
+		{
+			To_RV_CreateMeeting$ = removebylength(240, sXML);
+		}
+		else
+		{
+			To_RV_CreateMeeting$ = removebylength(len(sXML), sXML);
+		}
+		
+	} until (len(sXML) = 0);
+}
+
+Function ProcessCreateMeetingResponse(integer iType, string sData)
+{
+	if (Debug_Logic)
+	{
+		print ("\n** ProcessCreateMeetingResponse **\n");
+		print ("  Type:%u\n", iType);
+	}
+	
+	Add_Appt_Request_Mode = REQUEST_MODE_PROCESSING;
+	
+	
+	// Was it successful?
+	if (!find("<Error>", sData))
+	{
+		// Success.
+					
+		Add_Appt_Request_Mode = REQUEST_MODE_SUCCESS;
+		
+		// Request schedule based on type.
+		if (iType = TYPE_WORK)
+		{
+			// Type was workday. Need updated schedule regardless..
+			
+			Need_Workday_Schedule_Update = TRUE;
+			Need_Workday_Schedule_Update = FALSE;			 			
+		}
+		else if (iType = TYPE_DAY)
+		{
+			// Type was user. Only get schedule if the UI is still on that date.
+			
+			if (g_sCreateDayMeetingStartDate = g_sReqStartDate)
+			{
+				call GetUserSchedule();
+			}	
+		}
+	}
+	else
+	{
+		// Failure.
+					
+		Add_Appt_Request_Mode = REQUEST_MODE_FAILURE;
+	}
+	
+	Add_Appt_Request_Mode = REQUEST_MODE_IDLE;
+}
+
+Integer_Function NextEvent(integer iType, string sStartTime)
+{
+  integer i,
+  				iEventCount,
+  				iNextEvent;
+  
+  if (Debug_Logic)
+  {
+  	print ("\n** NextEvent **\n");
+  	print ("  Type:%u\n", iType);
+  	print ("  StartTime:%s\n", sStartTime);
+  }
+  
+  iNextEvent = 0;
+  
+  if (iType = TYPE_DAY)
+  {
+  	iEventCount = g_iStoredDayCount;
+  }
+  else if (iType = TYPE_WORK)
+  {
+  	iEventCount = g_iStoredWorkCount;
+  }
+  
+  if (iEventCount > 0)
+  {
+  	for (i = 1 to iEventCount)
+  	{
+  		if (iType = TYPE_DAY)
+  		{
+  			if (DayEvent[i].StartTime > sStartTime)
+  			{
+  				iNextEvent = i;
+  				
+  				break;
+  			}
+  		}
+  		else if (iType = TYPE_WORK)
+  		{
+  			if (WorkEvent[i].StartTime > sStartTime)
+  			{
+  				iNextEvent = i;
+  				
+  				break;
+  			}
+  		}
+  	}
+  }
+  
+  
+  if (Debug_Logic)
+  {
+  	print ("  NextEvent:%u\n", iNextEvent);
+  }
+  
+  return (iNextEvent); 	
+}
+
+String_Function BlocksToHrMin(integer iBlocks)
+{
+	integer iTimeMinutes,
+					iTimeHour,
+					iTimeMin;
+	
+	string sTime[5];
+	
+	if (Debug_Logic)
+	{
+		print ("\n** BlocksToHrMin **\n");
+		print ("  Blocks:%u\n", iBlocks);
+	}
+	
+	iTimeMinutes = iBlocks * 30;
+	iTimeHour = iTimeMinutes / 60;
+	iTimeMin = iTimeMinutes MOD 60;
+	
+	if (iTimeHour < 10)
+	{
+		sTime = "0" + itoa(iTimeHour);
+	}
+	else
+	{
+		sTime = itoa(iTimeHour);
+	}
+	
+	if (iTimeMin < 10)
+	{
+		sTime = sTime + ":" + "0" + itoa(iTimeMin);
+	}
+	else
+	{
+		sTime = sTime + ":" + itoa(iTimeMin);
+	}
+	
+	if (Debug_Logic)
+	{
+		print ("  Time:%s\n", sTime);
+	}
+	
+	return (sTime);
+}
+
+Function ShowWorkdaySchedule()
+{
+  if (Debug_Logic)
+  {
+		print ("\n** ShowWorkdaySchedule **\n");  
+  }
+  
+  On_Workday = TRUE;
+  g_bOnWorkday = TRUE;  
+
+  g_iReqYear = g_iTodayYear;
+  g_iReqMonth = g_iTodayMonth;
+  g_iReqDay = g_iTodayDay;
+  
+  g_iDaysInMonth = DaysInMonth(g_iReqMonth, g_iReqYear); 
+    
+  g_sReqStartDate = FormatDateReq(1);
+
+  
+  if (RoomView_Online)
+  {
+    if (Work_Schedule_Request_Mode = REQUEST_MODE_IDLE)
+    {
+      call UpdateCalendar(TYPE_WORK);
+    }
+    else
+    {
+    	//Update the TP label  
+	 		Schedule_Label$ = "Updating schedule ...";
+	 		g_sScheduleLabel = "Updating schedule ...";
+    }
+  }
+}
+
+Function ProcessFromWorkdayModDataOut$()
+{
+  if (Debug_Logic)
+  {
+		print ("\n** ProcessFromWorkdayModDataOut$ **\n");  
+  }
+  
+  // What type of data is this?
+  if (find("<Type>EventList</Type>", g_sRXData1))
+  {
+    // Type is workday event list.
+      	
+    if (g_bOnWorkday)
+    {
+    	// Set request variables since the data is not generated locally
+
+  		g_iReqYear = g_iTodayYear;
+  		g_iReqMonth = g_iTodayMonth;
+  		g_iReqDay = g_iTodayDay;
+  
+  		g_iDaysInMonth = DaysInMonth(g_iReqMonth, g_iReqYear); 
+    
+  		g_sReqStartDate = FormatDateReq(1);    			
+    }    		
+    		
+    call ProcessEventList(g_sRXData1);
+  }
+  else if (find("<Type>ScheduleResponse</Type>", g_sRXData1))
+  {
+    // Type is schedule response.
+      	
+    // What type of schedule response?
+    if (find(g_sUserRequestID, g_sRXData1))
+    {
+      // Response is user schedule response.
+      call ProcessScheduleResponse(g_sRXData1);
+    }
+    else if (find(g_sAttendeesRequestID, g_sRXData1))
+    {
+      // Response is attendees response.
+      call ProcessMoreInfoResponse(g_sRXData1);
+    }
+  }
+  else if (find("<Type>CreateResponse</Type>", g_sRXData1))
+  {
+    // Type is create response.
+      	
+    if (find(g_sCreateDayMeetingRequestID, g_sRXData1))
+    {      	
+      call ProcessCreateMeetingResponse(TYPE_DAY, g_sRXData1);
+    }
+    else if (find(g_sCreateWorkMeetingRequestID, g_sRXData1))
+    {      	
+      call ProcessCreateMeetingResponse(TYPE_WORK, g_sRXData1);
+    }
+  }
+}
+
+/*******************************************************************************************
+  Event Handlers
+  (Uncomment and declare additional event handlers as needed)
+*******************************************************************************************/
+
+PUSH Initialize_Module
+{
+  integer i;
+  string sDate[10];
+  
+  Initialize_Module_Busy_FB = TRUE;
+
+  g_bRXOK1 = TRUE;
+  g_sRXData1 = "";
+  
+	User_Schedule_Request_Mode = REQUEST_MODE_IDLE;
+	Work_Schedule_Request_Mode = REQUEST_MODE_IDLE;
+	More_Info_Request_Mode = REQUEST_MODE_IDLE;
+	Add_Appt_Request_Mode = REQUEST_MODE_IDLE;
+
+  g_bOnWorkday = TRUE;
+  On_Workday = TRUE;
+  
+  Schedule_Label$ = "";
+  
+  g_sMonth[1] = "January";
+  g_sMonth[2] = "February";
+  g_sMonth[3] = "March";
+  g_sMonth[4] = "April";
+  g_sMonth[5] = "May";
+  g_sMonth[6] = "June";
+  g_sMonth[7] = "July";
+  g_sMonth[8] = "August";
+  g_sMonth[9] = "September";
+  g_sMonth[10] = "October";
+  g_sMonth[11] = "November";
+  g_sMonth[12] = "December";
+  
+  call CheckDate();  
+  
+  for (i = 1 to MAX_TIME_BLOCKS)
+  {
+    Time_Block_Mode[i] = BLOCK_MODE_NONE;
+    Time_Block_Text$[i] = "";
+  }
+  
+  if (!RoomView_Online)
+  {
+    Schedule_Label$ = "Can Not Retrieve Data";
+  }
+    
+  Initialize_Module_Busy_FB = FALSE;
+}
+
+PUSH Check_Date
+{
+	call CheckDate();
+}
+
+PUSH RoomView_Online
+{  
+  call CheckDate();
+  
+  g_sReqStartDate = FormatDateReq(1);
+  g_iReqStartDate = DateToInteger(g_sReqStartDate);
+  
+  g_iReqYear = g_iTodayYear;
+  g_iReqMonth = g_iTodayMonth;
+  g_iReqDay = g_iTodayDay;
+  
+  g_iDaysInMonth = DaysInMonth(g_iReqMonth, g_iReqYear); 
+  
+  Schedule_Label$ = "";
+  g_sScheduleLabel = "";  
+}
+
+
+
+
+PUSH Get_User_Schedule
+{  
+  if (RoomView_Online && User_Schedule_Request_Mode = REQUEST_MODE_IDLE)
+  {    
+    call GetUserSchedule();
+  }
+}
+
+PUSH Get_User_Schedule_Timeout
+{
+  g_sUserRequestID = "";
+  
+  //Update the TP label  
+	Schedule_Label$ = "Request timeout ...";
+	g_sScheduleLabel = "Request timeout ...";
+  
+  User_Schedule_Request_Mode = REQUEST_MODE_FAILURE;
+  User_Schedule_Request_Mode = REQUEST_MODE_IDLE;
+  
+  wait (200)
+  {
+  	call ShowWorkdaySchedule();
+  }
+}
+
+PUSH Cancel_Get_User_Schedule
+{
+  g_sUserRequestID = "";
+  
+  User_Schedule_Request_Mode = REQUEST_MODE_IDLE;
+}
+
+PUSH Show_Workday_Schedule
+{
+	call ShowWorkdaySchedule(); 
+}
+
+PUSH Next_Day
+{
+  // On workday?
+  if (g_bOnWorkday)
+  {
+  	On_Workday = FALSE;
+  	g_bOnWorkday = FALSE;
+  }
+
+  if (g_iReqDay < g_iDaysInMonth)
+   g_iReqDay = g_iReqDay + 1;
+  else
+  {
+  	if (g_iReqMonth <> 12)
+    {
+      g_iReqMonth = g_iReqMonth + 1;
+      g_iReqDay = 1;
+      
+      g_iDaysInMonth = DaysInMonth(g_iReqMonth, g_iReqYear);
+    }
+    else //last month, so go to next year
+    {
+      g_iReqYear = g_iReqYear + 1;
+      g_iReqMonth = 1;
+      g_iReqDay = 1;
+      g_iDaysInMonth = 31;
+    }
+  }
+
+  g_sReqStartDate = FormatDateReq(2);
+ 	g_iReqStartDate = DateToInteger(g_sReqStartDate);
+  
+  // On workday after day adj?
+  if (g_iReqMonth = g_iTodayMonth &&
+   g_iReqDay = g_iTodayDay &&
+   g_iReqYear = g_iTodayYear)
+  {
+  	// Yes, now on workday.
+
+  	On_Workday = TRUE;
+  	g_bOnWorkday = TRUE;
+  	
+		if (Work_Schedule_Request_Mode = REQUEST_MODE_IDLE)
+		{
+      Schedule_Label$ = FormatDate(g_sReqStartDate, 1);
+      
+      call UpdateCalendar(TYPE_WORK);
+    }
+    else if (Work_Schedule_Request_Mode = REQUEST_MODE_PROCESSING)
+    {
+      Schedule_Label$ = "Receiving new schedule ...";
+    }
+  	  	
+  }
+  else
+  {
+  	// Not on workday after day adj.
+  	
+  	Schedule_Label$ = FormatDate(g_sReqStartDate, 1);
+  	
+  	On_Workday = FALSE;
+  	g_bOnWorkday = FALSE;
+  }
+}
+
+PUSH Prev_Day
+{
+  
+  // On workday?
+  if (g_bOnWorkday)
+  {
+  	On_Workday = FALSE;
+  	g_bOnWorkday = FALSE;
+  }  
+  
+  if (g_iReqDay > 1)
+   g_iReqDay = g_iReqDay - 1;
+  else
+  {
+  	if (g_iReqMonth <> 1)
+    {
+    	g_iReqMonth = g_iReqMonth - 1;
+      g_iReqDay = DaysInMonth(g_iReqMonth, g_iReqYear);
+      
+      g_iDaysInMonth = DaysInMonth(g_iReqMonth, g_iReqYear);
+    }
+    else //first month, so go to previous year
+    {
+      g_iReqYear = g_iReqYear - 1;
+      g_iReqMonth = 12;
+      g_iReqDay = 31;
+      g_iDaysInMonth = 31;
+    }
+  }
+
+  g_sReqStartDate = FormatDateReq(2);
+  g_iReqStartDate = DateToInteger(g_sReqStartDate);
+
+  // On workday after day adj?
+  if (g_iReqMonth = g_iTodayMonth &&
+   g_iReqDay = g_iTodayDay &&
+   g_iReqYear = g_iTodayYear)
+  {
+  	// Yes, now on workday.
+
+  	On_Workday = TRUE;
+  	g_bOnWorkday = TRUE;
+  	
+		if (Work_Schedule_Request_Mode = REQUEST_MODE_IDLE)
+		{
+      Schedule_Label$ = FormatDate(g_sReqStartDate, 1);
+      
+      call UpdateCalendar(TYPE_WORK);
+    }
+    else if (Work_Schedule_Request_Mode = REQUEST_MODE_PROCESSING)
+    {
+      Schedule_Label$ = "Receiving new schedule ...";
+    }
+  	  	
+  }
+  else
+  {
+  	// Not on workday after next day.
+  	
+  	Schedule_Label$ = FormatDate(g_sReqStartDate, 1);
+  	
+  	On_Workday = FALSE;
+  	g_bOnWorkday = FALSE;
+  }
+}
+
+CHANGE Selected_Block
+{
+  integer iIndex,
+  				iActualBlock,
+  				iNextEvent,
+  				iBlockStartTimeMinutes,
+  				iBlockStartTimeHour,
+  				iBlockStartTimeMin;
+  
+  string sBlockStartTime[5];
+  
+  if (Debug_Logic)
+  {
+  	print ("\n** SelectedBlock **\n");
+  }
+  
+  // Calculate block start time
+  iActualBlock = ((Current_Page * Field_Qty) - Field_Qty) + Selected_Block;
+  
+  if (iActualBlock <= MAX_TIME_BLOCKS)
+  {
+  
+	  iBlockStartTimeMinutes = (iActualBlock * 30) - 30;
+	  iBlockStartTimeHour = iBlockStartTimeMinutes / 60;
+	  iBlockStartTimeMin = iBlockStartTimeMinutes MOD 60;
+	  
+	  if (iBlockStartTimeHour < 10)
+	  {
+	  	sBlockStartTime = "0" + itoa(iBlockStartTimeHour);
+	  }
+	  else
+	  {
+	  	sBlockStartTime = itoa(iBlockStartTimeHour);  
+	  }
+	
+	  if (iBlockStartTimeMin < 10)
+	  {
+	  	sBlockStartTime = sBlockStartTime + ":" + "0" + itoa(iBlockStartTimeMin);
+	  }
+	  else
+	  {
+	  	sBlockStartTime = sBlockStartTime + ":" + itoa(iBlockStartTimeMin);  
+	  }
+	  
+	  if (Debug_Logic)
+	  {
+	  	print ("  ActualBlock:%u\n", iActualBlock);
+	  	print ("  BlockStartTime:%s\n", sBlockStartTime);
+	  }
+	  
+	  // On workday?
+	  if (g_bOnWorkday)
+	  {
+	  	// Yes, on workday.
+	  	
+	  	if (Debug_Logic)
+	  	{
+	  		print ("  On workday.\n");
+	  	}
+	  	
+	  	// Not processing work schedule?
+	  	if (Add_Appt_Request_Mode = REQUEST_MODE_IDLE &&
+	  	 Work_Schedule_Request_Mode = REQUEST_MODE_IDLE &&
+	  	 User_Schedule_Request_Mode = REQUEST_MODE_IDLE)
+	  	{
+	  		// Yes, not processing work schedule
+	  		
+	  		if (Debug_Logic)
+	  		{
+	  			print (" Not processing workday schedule, not add appt. active. & not user request active.\n");
+	  		}
+	  		
+	  		// Block has data?  		
+	  		if (g_iBlockEventIndex[iActualBlock] > 0)
+	  		{
+		    	// Yes, block has data. This also means it is not private.
+		    	
+		    	if (Debug_Logic)
+		    	{
+		    		print ("  Block has data.\n");
+		    	}
+		    	    	
+		    	// Allow more info?
+		    	if (En_Selected_Block_MoreInfo)
+		    	{
+		    		// Yes, allow more info.
+		    		
+		    		iIndex = g_iBlockEventIndex[iActualBlock];  
+		      
+		    		if (Debug_Logic)
+		    		{
+		      		print ("  BlockEventIndex:%u\n", iIndex);
+		    		}	    		
+		      
+		      	call GetMoreInfo(WorkEvent[iIndex].MeetingID);
+		              
+		      	Selected_Block_MeetingID$ = WorkEvent[iIndex].MeetingID;
+		      	Selected_Block_Subject$ = WorkEvent[iIndex].Subject;
+		      	Selected_Block_Start_Date$ = FormatDate(WorkEvent[iIndex].StartDate, 2);
+		      	Selected_Block_Start_Time$ = FormatTime(WorkEvent[iIndex].StartTime);
+		      	Selected_Block_End_Date$ = FormatDate(WorkEvent[iIndex].EndDate, 2);
+		      	Selected_Block_End_Time$ = FormatTime(WorkEvent[iIndex].EndTime);      			
+		      	
+            // Organizer
+            if (len(WorkEvent[iIndex].Organizer) = 0)
+             Selected_Block_Organizer$ = "Unknown";
+            else
+             Selected_Block_Organizer$ = WorkEvent[iIndex].Organizer;
+             		
+		      	Selected_Block_Show_MoreInfo = TRUE;
+            Selected_Block_Show_MoreInfo = FALSE;	    		
+		    	}
+		    }
+		    else
+		    {
+		    	// Block has no data.
+		    	
+		    	if (Debug_Logic)
+		    	{
+		    		print ("  Block has no data.\n");
+		    	}
+		    	
+		    	// Allow reserve?
+		  		if (En_Selected_Block_AddAppt)
+		  		{
+		  			g_sAddApptStartDate = g_sReqStartDate;
+		  			g_sAddApptStartTime = sBlockStartTime;
+		  			g_iAddApptStartBlock = iActualBlock;
+		  			g_iAddApptEndBlock = iActualBlock;
+		  			g_iAddApptDurBlocks = 1;
+		  			
+		  			// Any block left?
+		  			if (iActualBlock < 48)
+		  			{
+		  				// Yes, have blocks left.
+		  				
+		  				// Find next event.		
+		  				iNextEvent = NextEvent(TYPE_WORK, g_sAddApptStartTime);
+		  					
+		  				if (iNextEvent > 0)
+		  				{
+		  					g_iAddApptMaxDurBlocks = WorkEvent[iNextEvent].StartBlock - iActualBlock;
+		  				}
+		  				else
+		  				{
+		  					g_iAddApptMaxDurBlocks = 48 - iActualBlock;
+		  				}
+		  			}
+		  			else
+		  			{
+		  				// Do not have any block left.
+		  				g_iAddApptMaxDurBlocks = 1;
+		  			}
+		  			
+		  			// Set outputs
+		  			Add_Appointment_Start_Date$ = FormatDate(g_sAddApptStartDate, 2);
+	          Add_Appointment_Start_Time$ = FormatTime(g_sAddApptStartTime);
+	          Add_Appointment_Dur$ = BlocksToHrMin(g_iAddApptDurBlocks);
+	
+		  			Selected_Block_Show_AddAppt = TRUE;
+		  			Selected_Block_Show_AddAppt = FALSE;
+		  		}	    	
+		    }
+	  	}
+	  	else
+	  	{
+	  		if (Debug_Logic)
+	  		{
+	  			print (" Process active:\n");
+	  			print ("  AddApptMode:%u\n", Add_Appt_Request_Mode);
+	  			print ("  WorkSchedMode:%u\n", Work_Schedule_Request_Mode);
+	  			print ("  UserSchedMode:%u\n", User_Schedule_Request_Mode);
+	  		}  		
+	  	}  	
+	  }
+	  else
+	  {
+	  	// Not on workday.
+	  	
+	  	if (Debug_Logic)
+	  	{
+	  		print ("  Not on workday.\n");
+	  	}
+	  	
+	  	// Not processing user schedule?
+	  	if (Add_Appt_Request_Mode = REQUEST_MODE_IDLE &&
+	  	 User_Schedule_Request_Mode = REQUEST_MODE_IDLE)
+	  	{
+	  		// Yes, not processing user schedule
+	  		
+	  		if (Debug_Logic)
+	  		{
+	  			print ("  Not processing user schedule.\n");
+	  		}
+	  		
+	  		// Block has data?  		
+	  		if (g_iBlockEventIndex[iActualBlock] > 0)
+	  		{
+		    	// Yes, block has data. This also means it is not private.
+		    	
+		    	if (Debug_Logic)
+		    	{
+		    		print ("  Block has data.\n");
+		    	}
+		    	    	
+		    	// Allow more info?
+		    	if (En_Selected_Block_MoreInfo)
+		    	{
+		    		// Yes, allow more info 
+	
+		    		iIndex = g_iBlockEventIndex[iActualBlock];  
+		      
+		    		if (Debug_Logic)
+		    		{
+		      		print ("  BlockEventIndex:%u\n", iIndex);
+		    		}
+		    			    		
+		      	call GetMoreInfo(DayEvent[iIndex].MeetingID);
+		        
+		      	Selected_Block_MeetingID$ = DayEvent[iIndex].MeetingID;
+		      	Selected_Block_Organizer$ = DayEvent[iIndex].Organizer;
+		      	Selected_Block_Subject$ = DayEvent[iIndex].Subject;
+		      	Selected_Block_Start_Date$ = FormatDate(DayEvent[iIndex].StartDate, 2);
+		      	Selected_Block_Start_Time$ = FormatTime(DayEvent[iIndex].StartTime);
+		      	Selected_Block_End_Date$ = FormatDate(DayEvent[iIndex].EndDate, 2);
+		      	Selected_Block_End_Time$ = FormatTime(DayEvent[iIndex].EndTime);
+	
+		     		Selected_Block_Show_MoreInfo = TRUE;
+		     		Selected_Block_Show_MoreInfo = FALSE;
+		    	}
+		    }
+		    else
+		    {
+		    	// Block has no data.
+		    	
+		    	if (Debug_Logic)
+		    	{
+		    		print ("  Block has no data.\n");
+		    	}
+		    	
+		    	// Allow reserve?
+		  		if (En_Selected_Block_AddAppt)
+		  		{
+		  			g_sAddApptStartDate = g_sReqStartDate;
+		  			g_sAddApptStartTime = sBlockStartTime;
+		  			g_iAddApptStartBlock = iActualBlock;
+		  			g_iAddApptEndBlock = iActualBlock;
+		  			g_iAddApptDurBlocks = 1;
+		  			
+		  			// Any block left?
+		  			if (iActualBlock < 48)
+		  			{
+		  				// Yes, have blocks left.
+		  				
+		  				// Find next event.		
+		  				iNextEvent = NextEvent(TYPE_DAY, g_sAddApptStartTime);
+		  					
+		  				if (iNextEvent > 0)
+		  				{
+		  					g_iAddApptMaxDurBlocks = DayEvent[iNextEvent].StartBlock - iActualBlock;
+		  				}
+		  				else
+		  				{
+		  					g_iAddApptMaxDurBlocks = 48 - iActualBlock;
+		  				}
+		  			}
+		  			else
+		  			{
+		  				// Do not have any block left.
+		  				g_iAddApptMaxDurBlocks = 1;
+		  			}
+		  			
+		  			// Set outputs
+		  			Add_Appointment_Start_Date$ = FormatDate(g_sAddApptStartDate, 2);
+	          Add_Appointment_Start_Time$ = FormatTime(g_sAddApptStartTime);
+	          Add_Appointment_Dur$ = BlocksToHrMin(g_iAddApptDurBlocks);
+	
+		  			Selected_Block_Show_AddAppt = TRUE;
+		  			Selected_Block_Show_AddAppt = FALSE;
+		  		}	    	
+		    }
+		  }
+		}
+  }
+}
+
+PUSH Add_Appointment_Dur_Minus
+{
+	if (g_iAddApptDurBlocks > 1)
+	{
+		g_iAddApptDurBlocks = g_iAddApptDurBlocks - 1;
+		
+		Add_Appointment_Dur$ = BlocksToHrMin(g_iAddApptDurBlocks);
+	}
+}
+
+PUSH Add_Appointment_Dur_Plus
+{
+	if (g_iAddApptDurBlocks < g_iAddApptMaxDurBlocks)
+	{
+		g_iAddApptDurBlocks = g_iAddApptDurBlocks + 1;
+		
+		Add_Appointment_Dur$ = BlocksToHrMin(g_iAddApptDurBlocks);
+	}
+}
+
+PUSH Add_Appointment_Save
+{
+	integer iEndTimeHour,
+					iEndTimeMin;
+					
+	string sEndTime[5],
+         sEndDate[10];
+	
+	if (Add_Appt_Request_Mode = REQUEST_MODE_IDLE)
+	{
+	  g_iAddApptEndBlock = g_iAddApptStartBlock + (g_iAddApptDurBlocks - 1);
+    
+	  // Calculate the end time
+	  iEndTimeHour = (g_iAddApptEndBlock * 30) / 60;
+	  iEndTimeMin = (g_iAddApptEndBlock * 30) MOD 60;
+	  
+    if (iEndTimeHour = 24)
+     iEndTimeHour = 0;
+    
+	  if (iEndTimeHour < 10)
+	  {
+	  	sEndTime = "0" + itoa(iEndTimeHour);
+	  }
+	  else
+	  {
+	  	sEndTime = itoa(iEndTimeHour);
+	  }
+	  
+	  if (iEndTimeMin < 10)
+	  {
+	  	sEndTime = sEndTime + ":" + "0" + itoa(iEndTimeMin);
+	  }
+	  else
+	  {
+	  	sEndTime = sEndTIme + ":" + itoa(iEndTimeMin);
+	  }
+	  
+    // Is end time tomorrow?
+    if (sEndTime = "00:00")
+     sEndDate = NextDayDate(g_sAddApptStartDate, "1");
+    else
+     sEndDate = g_sAddApptStartDate;
+    
+		call CreateMeeting(g_sAddApptStartDate, g_sAddApptStartTime, sEndDate, sEndTime, Add_Appt_Subject$); 
+	}
+}
+
+PUSH Add_Appointment_Request_Timeout
+{
+	g_sCreateWorkMeetingRequestID = "";		
+	g_sCreateDayMeetingRequestID = "";	
+	
+	Add_Appt_Request_Mode = REQUEST_MODE_FAILURE;
+	Add_Appt_Request_Mode = REQUEST_MODE_IDLE;
+}
+
+PUSH MoreInfo_Data_Timeout
+{
+	Meeting_Required_Attendees$ = "Data timeout ...";
+	Meeting_Optional_Attendees$ = "Data timeout ...";
+	
+	More_Info_Request_Mode = REQUEST_MODE_FAILURE;
+	More_Info_Request_Mode = REQUEST_MODE_IDLE;
+	
+	wait (300)
+	{
+		Meeting_Required_Attendees$ = "";
+		Meeting_Optional_Attendees$ = "";	
+	}	
+}
+
+CHANGE From_Workday_Mod_DataOut$
+{  
+  if (g_bRXOK1)
+  {
+    g_bRXOK1 = FALSE;
+    
+    while(1)
+    {
+    	g_sRXData1 = gather("</Data>", From_Workday_Mod_DataOut$);
+    	
+      call ProcessFromWorkdayModDataOut$();    	
+    }
+  }    
+}
+
+/*******************************************************************************************
+  Main()
+  Uncomment and place one-time startup code here
+  (This code will get called when the system starts up)
+*******************************************************************************************/
+/*
+Function Main()
+{
+  WaitForInitializationComplete(); 
+}
+*/
+
+

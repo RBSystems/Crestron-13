@@ -1,0 +1,173 @@
+[BEGIN]
+  Version=1
+[END]
+[BEGIN]
+  ObjTp=FSgntr
+  Sgntr=UserSPlus
+  RelVrs=1
+  IntStrVrs=1
+  SPlusVrs=4.04.01
+  CrossCplrVrs=1.3
+[END]
+[BEGIN]
+  ObjTp=Hd
+  Cmn1=To be used with Biamp Tesira State Control v1.4.umc module only.
+  Cmn2=\\Not to be used as a stand-alone module.
+[END]
+[BEGIN]
+  ObjTp=Symbol
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,718,756,854,
+  Exclusions_CDS=5
+  Inclusions_CDS=6
+  Name=Biamp Tesira State Control v1.4
+  SmplCName=Biamp Tesira State Control v1.4.usp
+  Code=1
+  SysRev5=4.006
+  SMWRev=3.00.00
+  InputCue1=[~UNUSED~]
+  InputSigType1=Digital
+  InputCue2=[~UNUSED~]
+  InputSigType2=Digital
+  InputCue3=[~UNUSED~]
+  InputSigType3=Digital
+  InputCue4=[~UNUSED~]
+  InputSigType4=Digital
+  InputCue5=Poll_State
+  InputSigType5=Digital
+  InputCue6=[~UNUSED~]
+  InputSigType6=Digital
+  InputCue7=State_On
+  InputSigType7=Digital
+  InputCue8=State_Off
+  InputSigType8=Digital
+  InputCue9=State_Toggle
+  InputSigType9=Digital
+  InputCue10=[~UNUSED~]
+  InputSigType10=Digital
+  OutputCue1=[~UNUSED~]
+  OutputSigType1=Digital
+  OutputCue2=[~UNUSED~]
+  OutputSigType2=Digital
+  OutputCue3=[~UNUSED~]
+  OutputSigType3=Digital
+  OutputCue4=[~UNUSED~]
+  OutputSigType4=Digital
+  OutputCue5=Is_Initialized
+  OutputSigType5=Digital
+  OutputCue6=[~UNUSED~]
+  OutputSigType6=Digital
+  OutputCue7=State_Is_On
+  OutputSigType7=Digital
+  OutputCue8=State_Is_Off
+  OutputSigType8=Digital
+  OutputCue9=[~UNUSED~]
+  OutputSigType9=Digital
+  OutputCue10=[~UNUSED~]
+  OutputSigType10=Digital
+  InputList2Cue1=From_Processor$
+  InputList2SigType1=Serial
+  OutputList2Cue1=To_Processor$
+  OutputList2SigType1=Serial
+  ParamCue1=[Reference Name]
+  ParamCue2=InstanceTag
+  ParamSigType2=String
+  ParamCue3=StateType
+  ParamSigType3=String
+  ParamCue4=Index1
+  ParamSigType4=Constant
+  ParamCue5=Index2
+  ParamSigType5=Constant
+  MinVariableInputs=10
+  MaxVariableInputs=10
+  MinVariableInputsList2=1
+  MaxVariableInputsList2=1
+  MinVariableOutputs=10
+  MaxVariableOutputs=10
+  MinVariableOutputsList2=1
+  MaxVariableOutputsList2=1
+  MinVariableParams=4
+  MaxVariableParams=4
+  Expand=expand_separately
+  Expand2=expand_separately
+  ProgramTree=Logic
+  SymbolTree=32
+  Hint=
+  PdfHelp=
+  HelpID= 
+  Render=4
+  Smpl-C=16
+  CompilerCode=-48
+  CompilerParamCode=27
+  CompilerParamCode5=14
+  NumFixedParams=1
+  Pp1=1
+  Pp2=2
+  Pp3=3
+  Pp4=4
+  Pp5=5
+  MPp=5
+  NVStorage=10
+  ParamSigType1=String
+  SmplCInputCue1=o#
+  SmplCOutputCue1=i#
+  SmplCInputList2Cue1=an#
+  SmplCOutputList2Cue1=ai#
+  SPlus2CompiledName=S2_Biamp_Tesira_State_Control_v1_4
+  SymJam=NonExclusive
+  FileName=Biamp Tesira State Control v1.4.ush
+  SIMPLPlusModuleEncoding=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=1
+  Tp=1
+  NoS=False
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=2
+  Tp=1
+  HD=True
+  DV=
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=3
+  Tp=1
+  HD=True
+  DV=
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=4
+  Tp=1
+  HD=True
+  DV=0d
+  Sgn=0
+  Lng=False
+  NF=1
+  NoS=True
+  DNF=1
+  VVS=1
+  LR=0d
+  HR=256d
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=5
+  Tp=1
+  HD=True
+  DV=0d
+  Sgn=0
+  Lng=False
+  NF=1
+  NoS=True
+  DNF=1
+  VVS=1
+  LR=0d
+  HR=256d
+[END]
